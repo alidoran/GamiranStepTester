@@ -16,9 +16,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ir.dorantech.gamiransteptester.viewmodel.StepTesterViewModel
 
 @Composable
-@Preview
 fun StepCountScreen(
-    onBackClick: () -> Unit = {},
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -55,4 +54,12 @@ fun StepCountScreen(
             Text("Back to Sensors")
         }
     }
+}
+
+@Preview
+@Composable
+fun StepCountScreenPreview() {
+    StepCountScreen(
+        onBackClick = {}
+    )
 }

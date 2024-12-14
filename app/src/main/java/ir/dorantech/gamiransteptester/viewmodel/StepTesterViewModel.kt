@@ -1,9 +1,7 @@
 package ir.dorantech.gamiransteptester.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.fitness.LocalRecordingClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.dorantech.gamiransteptester.domain.usecase.StepCountUseCase
 import kotlinx.coroutines.Job
