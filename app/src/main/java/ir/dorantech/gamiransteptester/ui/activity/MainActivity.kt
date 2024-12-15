@@ -1,5 +1,6 @@
 package ir.dorantech.gamiransteptester.ui.activity
 
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -52,11 +53,20 @@ class MainActivity : ComponentActivity() {
                             .weight(3f)
                             .fillMaxSize(),
                         onRequestPermission = { chosenScreen, permissionList ->
+                            val runningQOrLater =
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
                             vm.setChosenScreen(chosenScreen)
-                            for(permission in permissionList) {
-                                vm.addLogToList("Requested permission: ${permission.substringAfterLast('.')}")
+                            for (permission in permissionList) {
+                                vm.addLogToList(
+                                    "Requested permission: ${permission.substringAfterLast('.')}"
+                                )
                             }
-                            registerForActivityResult.launch(permissionList)
+                            if (runningQOrLater)
+                                registerForActivityResult.launch(permissionList)
+                            else {
+                                vm.setPermissionResult(true)
+                                vm.addLogToList("All permissions granted")
+                            }
                         }
                     )
                     LazyColumn(

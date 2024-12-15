@@ -57,6 +57,6 @@ fun HomeScreenPreview() {
         onStepCounterClick = {},
         onRecordingApiClick = {},
         onUserActivityClick = {},
-        onLocationPermissionClick = {}
+        onLocationPermissionClick = {},
     )
 }
