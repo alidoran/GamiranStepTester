@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.dorantech.gamiransteptester.domain.model.StepResult
 import ir.dorantech.gamiransteptester.domain.repository.StepCounterRepository
 import kotlinx.coroutines.channels.awaitClose
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
 class StepCounterRepositoryImpl @Inject constructor(
-    context: Context,
+    @ApplicationContext val context: Context,
 ): StepCounterRepository {
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val sensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)

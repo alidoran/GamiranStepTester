@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import ir.dorantech.gamiransteptester.viewmodel.StepTesterViewModel
+import ir.dorantech.gamiransteptester.ui.viewmodel.StepTesterViewModel
 
 @Composable
 fun StepCountScreen(

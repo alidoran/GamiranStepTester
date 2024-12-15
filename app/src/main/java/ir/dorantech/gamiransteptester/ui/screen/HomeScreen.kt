@@ -9,18 +9,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import ir.dorantech.gamiransteptester.ui.viewmodel.StepTesterViewModel
 
 @Composable
 fun HomeScreen(
     onStepCounterClick: () -> Unit,
     onRecordingApiClick: () -> Unit,
+    onUserActivityClick: () -> Unit,
+    onLocationPermissionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column (
+    val vm: StepTesterViewModel = hiltViewModel()
+    vm.addLogToList("HomeScreenLoaded")
+    Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-    ){
+    ) {
         Button(
             onClick = onStepCounterClick
         ) {
@@ -31,6 +37,16 @@ fun HomeScreen(
         ) {
             Text(text = "Recording API")
         }
+        Button(
+            onClick = onUserActivityClick
+        ) {
+            Text(text = "User Activity")
+        }
+        Button(
+            onClick = onLocationPermissionClick
+        ) {
+            Text(text = "Get Location Permissions")
+        }
     }
 }
 
@@ -39,6 +55,8 @@ fun HomeScreen(
 fun HomeScreenPreview() {
     HomeScreen(
         onStepCounterClick = {},
-        onRecordingApiClick = {}
+        onRecordingApiClick = {},
+        onUserActivityClick = {},
+        onLocationPermissionClick = {}
     )
 }

@@ -16,6 +16,7 @@ ksp = "2.0.21-1.0.27"
 hiltNavigationCompose = "1.2.0"
 playServicesFitness = "21.2.0"
 coroutinesCore = "1.9.0"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -38,6 +39,7 @@ hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.r
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 play-services-fitness = { module = "com.google.android.gms:play-services-fitness", version.ref = "playServicesFitness" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutinesCore" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

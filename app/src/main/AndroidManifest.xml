@@ -2,9 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <!--Step Counter needed permission-->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <!--User Activity needed permission-->
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+    <!--Location needed permissions-->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
+        android:name=".StepTesterApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,7 +21,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.GamiranStepTester"
-        android:name=".StepTesterApp"
         tools:targetApi="35">
         <activity
             android:name=".ui.activity.MainActivity"
@@ -25,6 +32,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver android:name=".core.broadcast.ActivityRecognitionReceiver" />
     </application>
 
 </manifest>
