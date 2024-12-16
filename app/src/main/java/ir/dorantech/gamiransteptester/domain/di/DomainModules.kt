@@ -3,11 +3,13 @@ package ir.dorantech.gamiransteptester.domain.di
 import android.content.Context
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import ir.dorantech.gamiransteptester.domain.repository.ActivityRecognitionRequestRepository
 import ir.dorantech.gamiransteptester.domain.repository.StepCounterRepository
 import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionRequestUseCase
+import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionUseCase
 import ir.dorantech.gamiransteptester.domain.usecase.PermissionUseCase
 import ir.dorantech.gamiransteptester.domain.usecase.StepCountUseCase
 import ir.dorantech.gamiransteptester.domain.usecase.impl.ActivityRecognitionRequestUseCaseImpl
@@ -35,4 +37,10 @@ object DomainModules {
     ): PermissionUseCase {
         return PermissionUseCaseImpl(context)
     }
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface ActivityRecognitionReceiverEntryPoint {
+    fun getActivityRecognitionUseCase(): ActivityRecognitionUseCase
 }

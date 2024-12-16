@@ -9,7 +9,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import ir.dorantech.gamiransteptester.data.provider.ActivityRecognitionPendingIntentProvider
+import ir.dorantech.gamiransteptester.data.repository.ActivityRecognitionRepositoryImpl
 import ir.dorantech.gamiransteptester.data.repository.ActivityRecognitionRequestRepositoryImpl
+import ir.dorantech.gamiransteptester.domain.repository.ActivityRecognitionRepository
 import ir.dorantech.gamiransteptester.domain.repository.ActivityRecognitionRequestRepository
 import ir.dorantech.gamiransteptester.domain.repository.StepCounterRepository
 
@@ -48,5 +50,12 @@ object RepositoryModules {
         provider: ActivityRecognitionPendingIntentProvider
     ): PendingIntent {
         return provider.getPendingIntent()
+    }
+
+    @Provides
+    fun provideActivityRecognitionRepository(
+        repository: ActivityRecognitionRepositoryImpl
+    ): ActivityRecognitionRepository {
+        return repository
     }
 }

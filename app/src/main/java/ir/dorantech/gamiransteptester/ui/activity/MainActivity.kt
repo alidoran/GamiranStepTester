@@ -20,9 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import dagger.hilt.android.AndroidEntryPoint
-import ir.dorantech.gamiransteptester.core.broadcast.ActivityRecognitionReceiver
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.core.navigation.NavHostSetup
+import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionUseCase
 import ir.dorantech.gamiransteptester.ui.theme.GamiranStepTesterTheme
 import ir.dorantech.gamiransteptester.ui.viewmodel.MainActivityViewModel
 import javax.inject.Inject
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Inject
-    lateinit var receiver: ActivityRecognitionReceiver
+    lateinit var recognitionUseCase: ActivityRecognitionUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

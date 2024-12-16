@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.dorantech.gamiransteptester.core.broadcast.ActivityRecognitionReceiver
+import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionUseCase
 import javax.inject.Inject
 
 class ActivityRecognitionPendingIntentProvider @Inject constructor(
@@ -12,7 +13,7 @@ class ActivityRecognitionPendingIntentProvider @Inject constructor(
 ) {
     fun getPendingIntent(): PendingIntent {
         val intent = Intent(context, ActivityRecognitionReceiver::class.java).apply {
-            action = ActivityRecognitionReceiver.INTENT_ACTION
+            action = ActivityRecognitionUseCase.INTENT_ACTION
         }
         return PendingIntent.getBroadcast(
             context,

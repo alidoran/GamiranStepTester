@@ -14,6 +14,7 @@ import ir.dorantech.gamiransteptester.core.broadcast.ActivityRecognitionReceiver
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.domain.model.RecognitionResult
 import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionRequestUseCase
+import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,10 +23,11 @@ import javax.inject.Inject
 @HiltViewModel
 class UserActivityViewModel @Inject constructor(
     @ApplicationContext val context: Context,
-    private val receiver: ActivityRecognitionReceiver,
+    private val recognitionUseCase: ActivityRecognitionUseCase,
     private val activityRecognitionRequestUseCase: ActivityRecognitionRequestUseCase,
     private val pendingIntent: PendingIntent,
     private val logManager: LogManager,
+    private val receiver: ActivityRecognitionReceiver,
 ) : ViewModel() {
     private val _userActivityState = MutableStateFlow("Not Response Yet")
     val userActivityState: StateFlow<String> get() = _userActivityState
@@ -53,7 +55,7 @@ class UserActivityViewModel @Inject constructor(
     @SuppressLint("UnspecifiedRegisterReceiverFlag", "InlinedApi")
     private fun registerBroadcast() {
         val intentFilter = IntentFilter()
-        intentFilter.addAction(ActivityRecognitionReceiver.INTENT_ACTION)
+        intentFilter.addAction(ActivityRecognitionUseCase.INTENT_ACTION)
 
         when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             false -> context.registerReceiver(receiver, intentFilter)
@@ -65,10 +67,13 @@ class UserActivityViewModel @Inject constructor(
         }
     }
 
-    private suspend fun handleActivityTransitionEvents() {
-        receiver.eventsFlow.collect { event ->
-            logManager.addLog("Activity transition event: ${event.transitionType}")
-            _userActivityState.value = event.transitionType.toString()
+    private fun handleActivityTransitionEvents() {
+        viewModelScope.launch {
+            recognitionUseCase.eventsFlow.collect {
+                it?.let {
+                    _userActivityState.value = it.activityType
+                }
+            }
         }
     }
 }

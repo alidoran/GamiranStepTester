@@ -18,5 +18,6 @@ class ActivityRecognitionRequestRepositoryImpl @Inject constructor(
         pendingIntent: PendingIntent,
     ) = ActivityRecognition
         .getClient(context)
-        .requestActivityTransitionUpdates(request, pendingIntent)
+        .requestActivityUpdates(1, pendingIntent)
+//        .requestActivityTransitionUpdates(request, pendingIntent)
 }
