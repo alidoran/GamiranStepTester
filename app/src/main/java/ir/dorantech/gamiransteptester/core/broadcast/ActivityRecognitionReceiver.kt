@@ -5,9 +5,8 @@ import android.content.Context
 import android.content.Intent
 import dagger.hilt.android.EntryPointAccessors
 import ir.dorantech.gamiransteptester.domain.di.ActivityRecognitionReceiverEntryPoint
-import javax.inject.Inject
 
-class ActivityRecognitionReceiver @Inject constructor() : BroadcastReceiver(){
+class ActivityRecognitionReceiver: BroadcastReceiver(){
     override fun onReceive(context: Context, intent: Intent) {
         val entryPoint = EntryPointAccessors.fromApplication(
             context.applicationContext,
