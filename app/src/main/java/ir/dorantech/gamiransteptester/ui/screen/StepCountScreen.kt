@@ -18,7 +18,6 @@ import ir.dorantech.gamiransteptester.ui.viewmodel.StepCountViewModel
 
 @Composable
 fun StepCountScreen(
-    onBackClick: () -> Unit,
     vm: StepCountViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -55,11 +54,6 @@ fun StepCountScreen(
         ) {
             Text("Stop Counting")
         }
-        Button(
-            onClick = onBackClick
-        ) {
-            Text("Back to Sensors")
-        }
     }
 }
 
@@ -67,6 +61,5 @@ fun StepCountScreen(
 @Composable
 fun StepCountScreenPreview() {
     StepCountScreen(
-        onBackClick = {}
     )
 }

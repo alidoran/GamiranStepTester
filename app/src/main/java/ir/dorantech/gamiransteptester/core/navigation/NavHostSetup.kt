@@ -39,7 +39,6 @@ fun NavHostSetup(
                         navController.navigate(NavRoute.StepCounter)
                     else onRequestPermission(stepCounterPermission)
                 },
-                onRecordingApiClick = {},
                 onUserActivityClick = {
                     if (vm.checkPermissionsGranted(userActivityPermission.toList()))
                         navController.navigate(NavRoute.UserActivity)
@@ -54,7 +53,6 @@ fun NavHostSetup(
         }
         composable<NavRoute.StepCounter> {
             StepCountScreen(
-                onBackClick = { navController.navigate(NavRoute.Home) },
                 modifier = Modifier
             )
         }

@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface ActivityRecognitionRequestUseCase {
     operator fun invoke(
-        myPendingIntent: PendingIntent,
+        pendingIntent: PendingIntent,
     ): Flow<RecognitionResult>
 }

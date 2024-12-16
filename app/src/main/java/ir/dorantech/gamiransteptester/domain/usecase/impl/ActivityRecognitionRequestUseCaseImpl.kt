@@ -21,12 +21,11 @@ class ActivityRecognitionRequestUseCaseImpl @Inject constructor(
 ) : ActivityRecognitionRequestUseCase {
 
     override operator fun invoke(
-        myPendingIntent: PendingIntent,
+        pendingIntent: PendingIntent,
     ): Flow<RecognitionResult> {
         return callbackFlow {
             val task = repository.requestActivityTransitionUpdates(
-                createActivityTransitionRequest(),
-                myPendingIntent
+                pendingIntent
             )
             task.addOnSuccessListener {
                 trySend(RecognitionResult.Success)
@@ -41,12 +40,54 @@ class ActivityRecognitionRequestUseCaseImpl @Inject constructor(
     }
 
     private fun getActivityTransitionRequestList(): List<ActivityTransitionRequestModel> = listOf(
-        ActivityTransitionRequestModel(IN_VEHICLE, ACTIVITY_TRANSITION_ENTER),
-        ActivityTransitionRequestModel(IN_VEHICLE, ACTIVITY_TRANSITION_EXIT),
-        ActivityTransitionRequestModel(WALKING, ACTIVITY_TRANSITION_ENTER),
-        ActivityTransitionRequestModel(WALKING, ACTIVITY_TRANSITION_EXIT),
-        ActivityTransitionRequestModel(RUNNING, ACTIVITY_TRANSITION_ENTER),
-        ActivityTransitionRequestModel(RUNNING, ACTIVITY_TRANSITION_EXIT),
+        ActivityTransitionRequestModel(
+            detectedActivity = IN_VEHICLE,
+            activityTransition = ACTIVITY_TRANSITION_ENTER
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = IN_VEHICLE,
+            activityTransition = ACTIVITY_TRANSITION_EXIT
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = WALKING,
+            activityTransition = ACTIVITY_TRANSITION_ENTER
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = WALKING,
+            activityTransition = ACTIVITY_TRANSITION_EXIT
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = RUNNING,
+            activityTransition = ACTIVITY_TRANSITION_ENTER
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = RUNNING,
+            activityTransition = ACTIVITY_TRANSITION_EXIT
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = ON_FOOT,
+            activityTransition = ACTIVITY_TRANSITION_ENTER
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = ON_FOOT,
+            activityTransition = ACTIVITY_TRANSITION_EXIT
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = ON_BICYCLE,
+            activityTransition = ACTIVITY_TRANSITION_ENTER
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = ON_BICYCLE,
+            activityTransition = ACTIVITY_TRANSITION_EXIT
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = STILL,
+            activityTransition = ACTIVITY_TRANSITION_ENTER
+        ),
+        ActivityTransitionRequestModel(
+            detectedActivity = STILL,
+            activityTransition = ACTIVITY_TRANSITION_EXIT
+        ),
     )
 
     private fun getTransitions(): List<ActivityTransition> =
@@ -57,5 +98,7 @@ class ActivityRecognitionRequestUseCaseImpl @Inject constructor(
                 .build()
         }
 
+
+    // TODO: Creating pendingIntent with request
     private fun createActivityTransitionRequest() = ActivityTransitionRequest(getTransitions())
 }

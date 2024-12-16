@@ -20,11 +20,12 @@ class ActivityRecognitionRepositoryImpl @Inject constructor(
 
     override fun processRecognitionIntent(intent: Intent): StateFlow<RecognitionEvent?> {
         if (ActivityRecognitionResult.hasResult(intent)) {
-            logManager.addLog("processRecognitionIntent called with intent: $intent")
             val result = ActivityRecognitionResult.extractResult(intent)
             val detectedActivities = result?.probableActivities ?: emptyList()
 
             detectedActivities.forEach { activity ->
+                logManager.addLog("Detected activity: ${activity.toReadableActivity()}")
+                logManager.addLog("Confidence: ${activity.confidence}")
                 val event = RecognitionEvent(
                     activityType = activity.toReadableActivity(),
                     confidence = activity.confidence

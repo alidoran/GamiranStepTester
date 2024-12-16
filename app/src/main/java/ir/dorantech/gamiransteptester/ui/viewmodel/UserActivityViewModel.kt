@@ -24,7 +24,7 @@ class UserActivityViewModel @Inject constructor(
     private val pendingIntent: PendingIntent,
     private val logManager: LogManager,
 ) : ViewModel() {
-    private val _userActivityState = MutableStateFlow("Not Response Yet")
+    private val _userActivityState = MutableStateFlow("Stop")
     val userActivityState: StateFlow<String> get() = _userActivityState
 
     fun requestActivityTransitionUpdates() {

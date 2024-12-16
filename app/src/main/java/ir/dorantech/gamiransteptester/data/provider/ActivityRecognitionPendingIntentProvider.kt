@@ -3,6 +3,7 @@ package ir.dorantech.gamiransteptester.data.provider
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.dorantech.gamiransteptester.core.broadcast.ActivityRecognitionReceiver
 import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionUseCase
@@ -15,11 +16,17 @@ class ActivityRecognitionPendingIntentProvider @Inject constructor(
         val intent = Intent(context, ActivityRecognitionReceiver::class.java).apply {
             action = ActivityRecognitionUseCase.INTENT_ACTION
         }
+        val flags =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT or PendingIntent.FLAG_MUTABLE
+            else PendingIntent.FLAG_MUTABLE
+
+
         return PendingIntent.getBroadcast(
             context,
             0,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            flags
         )
     }
 }

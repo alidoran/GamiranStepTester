@@ -33,8 +33,7 @@ object RepositoryModules {
     @Provides
     fun provideActivityRecognitionRequestRepository(
         context: Context
-    ):
-            ActivityRecognitionRequestRepository {
+    ): ActivityRecognitionRequestRepository {
         return ActivityRecognitionRequestRepositoryImpl(context)
     }
 

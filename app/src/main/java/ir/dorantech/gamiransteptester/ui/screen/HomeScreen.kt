@@ -13,7 +13,6 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun HomeScreen(
     onStepCounterClick: () -> Unit,
-    onRecordingApiClick: () -> Unit,
     onUserActivityClick: () -> Unit,
     onLocationPermissionClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -27,11 +26,6 @@ fun HomeScreen(
             onClick = onStepCounterClick
         ) {
             Text(text = "StepCounter")
-        }
-        Button(
-            onClick = onRecordingApiClick
-        ) {
-            Text(text = "Recording API")
         }
         Button(
             onClick = onUserActivityClick
@@ -51,7 +45,6 @@ fun HomeScreen(
 fun HomeScreenPreview() {
     HomeScreen(
         onStepCounterClick = {},
-        onRecordingApiClick = {},
         onUserActivityClick = {},
         onLocationPermissionClick = {},
     )
