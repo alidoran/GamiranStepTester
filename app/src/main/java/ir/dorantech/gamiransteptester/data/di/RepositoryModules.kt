@@ -23,21 +23,22 @@ object RepositoryModules {
 
     @Provides
     fun provideStepCounterRepository(
-        @ApplicationContext context: Context
+        context: Context
     ): StepCounterRepository {
         return StepCounterRepositoryImpl(context)
     }
 
     @Provides
     fun provideActivityRecognitionRequestRepository(
-        @ApplicationContext context: Context
-    ): ActivityRecognitionRequestRepository {
+        context: Context
+    ):
+            ActivityRecognitionRequestRepository {
         return ActivityRecognitionRequestRepositoryImpl(context)
     }
 
     @Provides
     fun provideActivityRecognitionPendingIntentProvider(
-        @ApplicationContext context: Context
+        context: Context
     ): ActivityRecognitionPendingIntentProvider {
         return ActivityRecognitionPendingIntentProvider(context)
     }

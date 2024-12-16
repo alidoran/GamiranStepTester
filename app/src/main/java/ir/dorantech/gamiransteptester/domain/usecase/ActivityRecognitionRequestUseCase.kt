@@ -5,5 +5,7 @@ import ir.dorantech.gamiransteptester.domain.model.RecognitionResult
 import kotlinx.coroutines.flow.Flow
 
 interface ActivityRecognitionRequestUseCase {
-    operator fun invoke(myPendingIntent: PendingIntent): Flow<RecognitionResult>
+    operator fun invoke(
+        myPendingIntent: PendingIntent,
+    ): Flow<RecognitionResult>
 }

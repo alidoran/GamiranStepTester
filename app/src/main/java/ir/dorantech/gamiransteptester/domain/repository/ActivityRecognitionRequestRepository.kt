@@ -7,5 +7,6 @@ import com.google.android.gms.tasks.Task
 interface ActivityRecognitionRequestRepository {
     fun requestActivityTransitionUpdates(
         request: ActivityTransitionRequest,
-        myPendingIntent: PendingIntent): Task<Void>
+        pendingIntent: PendingIntent,
+        ): Task<Void>
 }

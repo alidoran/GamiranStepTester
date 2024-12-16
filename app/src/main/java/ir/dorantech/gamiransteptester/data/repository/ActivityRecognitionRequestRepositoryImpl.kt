@@ -15,8 +15,8 @@ class ActivityRecognitionRequestRepositoryImpl @Inject constructor(
 ) : ActivityRecognitionRequestRepository {
     override fun requestActivityTransitionUpdates(
         request: ActivityTransitionRequest,
-        myPendingIntent: PendingIntent
+        pendingIntent: PendingIntent,
     ) = ActivityRecognition
         .getClient(context)
-        .requestActivityTransitionUpdates(request, myPendingIntent)
+        .requestActivityTransitionUpdates(request, pendingIntent)
 }

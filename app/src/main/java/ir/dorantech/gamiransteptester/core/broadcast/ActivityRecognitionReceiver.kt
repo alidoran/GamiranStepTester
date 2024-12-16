@@ -14,6 +14,11 @@ class ActivityRecognitionReceiver @Inject constructor() : BroadcastReceiver() {
     private val _eventsFlow = MutableSharedFlow<ActivityTransitionEvent>()
     val eventsFlow: SharedFlow<ActivityTransitionEvent> = _eventsFlow
 
+    companion object {
+        const val INTENT_ACTION =
+            "ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS"
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("ActivityRecognitionReceiver", "onReceive called")
         val result = ActivityTransitionResult.extractResult(intent)

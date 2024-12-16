@@ -20,7 +20,9 @@ class ActivityRecognitionRequestUseCaseImpl @Inject constructor(
     private val repository: ActivityRecognitionRequestRepository
 ) : ActivityRecognitionRequestUseCase {
 
-    override operator fun invoke(myPendingIntent: PendingIntent): Flow<RecognitionResult> {
+    override operator fun invoke(
+        myPendingIntent: PendingIntent,
+    ): Flow<RecognitionResult> {
         return callbackFlow {
             val task = repository.requestActivityTransitionUpdates(
                 createActivityTransitionRequest(),

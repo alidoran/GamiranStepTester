@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,19 +14,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import ir.dorantech.gamiransteptester.ui.viewmodel.StepTesterViewModel
+import ir.dorantech.gamiransteptester.ui.viewmodel.StepCountViewModel
 
 @Composable
 fun StepCountScreen(
     onBackClick: () -> Unit,
+    vm: StepCountViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
+    DisposableEffect(Unit) {
+        onDispose {
+            vm.stopStepCounter()
+        }
+    }
+
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        val vm: StepTesterViewModel = hiltViewModel()
         val stepCountState = vm.stepCounterState.collectAsState()
         val status = rememberSaveable { mutableStateOf("Stop")}
 

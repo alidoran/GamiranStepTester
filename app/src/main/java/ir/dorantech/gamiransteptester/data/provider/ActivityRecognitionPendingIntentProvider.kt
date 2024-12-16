@@ -11,7 +11,9 @@ class ActivityRecognitionPendingIntentProvider @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     fun getPendingIntent(): PendingIntent {
-        val intent = Intent(context, ActivityRecognitionReceiver::class.java)
+        val intent = Intent(context, ActivityRecognitionReceiver::class.java).apply {
+            action = ActivityRecognitionReceiver.INTENT_ACTION
+        }
         return PendingIntent.getBroadcast(
             context,
             0,

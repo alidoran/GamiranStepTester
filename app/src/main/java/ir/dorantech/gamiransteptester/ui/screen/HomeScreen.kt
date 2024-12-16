@@ -9,8 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
-import ir.dorantech.gamiransteptester.ui.viewmodel.StepTesterViewModel
 
 @Composable
 fun HomeScreen(
@@ -20,8 +18,6 @@ fun HomeScreen(
     onLocationPermissionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm: StepTesterViewModel = hiltViewModel()
-    vm.addLogToList("HomeScreenLoaded")
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
