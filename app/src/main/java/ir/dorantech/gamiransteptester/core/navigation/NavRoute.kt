@@ -11,4 +11,7 @@ interface NavRoute {
 
     @Serializable
     data object UserActivity : NavRoute
+
+    @Serializable
+    data object Sensor : NavRoute
 }

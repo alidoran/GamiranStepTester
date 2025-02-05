@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 fun HomeScreen(
     onStepCounterClick: () -> Unit,
     onUserActivityClick: () -> Unit,
+    onSensorClick: () -> Unit,
     onLocationPermissionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -37,6 +38,11 @@ fun HomeScreen(
         ) {
             Text(text = "Get Location Permissions")
         }
+        Button(
+            onClick = { onSensorClick() }
+        ) {
+            Text("Sensor Event Listener")
+        }
     }
 }
 
@@ -47,5 +53,6 @@ fun HomeScreenPreview() {
         onStepCounterClick = {},
         onUserActivityClick = {},
         onLocationPermissionClick = {},
+        onSensorClick = {}
     )
 }

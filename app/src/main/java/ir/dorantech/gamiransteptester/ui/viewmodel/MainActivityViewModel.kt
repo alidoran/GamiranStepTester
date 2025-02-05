@@ -9,7 +9,6 @@ import javax.inject.Inject
 class MainActivityViewModel @Inject constructor(
     private val logManager: LogManager,
 ) : ViewModel() {
-
     fun addLogToList(log: String) {
         logManager.addLog(log)
     }

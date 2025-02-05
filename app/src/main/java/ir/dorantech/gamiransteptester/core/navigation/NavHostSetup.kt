@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import ir.dorantech.gamiransteptester.ui.screen.HomeScreen
+import ir.dorantech.gamiransteptester.ui.screen.SensorScreen
 import ir.dorantech.gamiransteptester.ui.screen.StepCountScreen
 import ir.dorantech.gamiransteptester.ui.screen.UserActivityScreen
 import ir.dorantech.gamiransteptester.ui.viewmodel.NavHostViewmodel
@@ -48,6 +49,9 @@ fun NavHostSetup(
                     if (!vm.checkPermissionsGranted(locationPermission.toList()))
                         onRequestPermission(locationPermission)
                 },
+                onSensorClick = {
+                    navController.navigate(NavRoute.Sensor)
+                },
                 modifier = Modifier,
             )
         }
@@ -59,6 +63,11 @@ fun NavHostSetup(
         composable<NavRoute.UserActivity> {
             UserActivityScreen(
                 modifier = Modifier
+            )
+        }
+        composable<NavRoute.Sensor> {
+            SensorScreen(
+                modifier = Modifier,
             )
         }
     }
