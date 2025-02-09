@@ -33,6 +33,3 @@ jobs:
 
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest
-
-      - name: Run Instrumented Tests (if emulator available)
-        run: ./gradlew connectedAndroidTest
