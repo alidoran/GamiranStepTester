@@ -1,4 +1,4 @@
-package ir.dorantech.gamiransteptester.core.broadcast
+package ir.dorantech.gamiransteptester.core.broadcast.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context

@@ -14,4 +14,10 @@ interface NavRoute {
 
     @Serializable
     data object Sensor : NavRoute
+
+    @Serializable
+    data object ServiceCounter : NavRoute
+
+    @Serializable
+    data object AppSettings : NavRoute
 }
