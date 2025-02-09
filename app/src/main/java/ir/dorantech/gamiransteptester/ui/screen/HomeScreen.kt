@@ -16,6 +16,7 @@ fun HomeScreen(
     onUserActivityClick: () -> Unit,
     onSensorClick: () -> Unit,
     onLocationPermissionClick: () -> Unit,
+    onRunningCounterClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -43,6 +44,11 @@ fun HomeScreen(
         ) {
             Text("Sensor Event Listener")
         }
+        Button(
+            onClick = { onRunningCounterClick() }
+        ) {
+            Text("Running counter")
+        }
     }
 }
 
@@ -53,6 +59,8 @@ fun HomeScreenPreview() {
         onStepCounterClick = {},
         onUserActivityClick = {},
         onLocationPermissionClick = {},
-        onSensorClick = {}
+        onSensorClick = {},
+        onRunningCounterClick = {},
+
     )
 }

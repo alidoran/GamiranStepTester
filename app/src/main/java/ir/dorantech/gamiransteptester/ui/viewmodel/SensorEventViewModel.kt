@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class SensorViewModel @Inject constructor(
+class SensorEventViewModel @Inject constructor(
     private val logManager: LogManager,
     @ApplicationContext private val context: Context,
 ) : ViewModel(){

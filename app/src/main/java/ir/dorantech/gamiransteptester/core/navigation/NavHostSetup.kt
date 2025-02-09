@@ -8,17 +8,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import ir.dorantech.gamiransteptester.ui.screen.HomeScreen
+import ir.dorantech.gamiransteptester.ui.screen.ServiceCounterScreen
 import ir.dorantech.gamiransteptester.ui.screen.SensorScreen
+import ir.dorantech.gamiransteptester.ui.screen.SettingsInstructionsScreen
 import ir.dorantech.gamiransteptester.ui.screen.StepCountScreen
 import ir.dorantech.gamiransteptester.ui.screen.UserActivityScreen
 import ir.dorantech.gamiransteptester.ui.viewmodel.NavHostViewmodel
+import ir.dorantech.gamiransteptester.ui.viewmodel.SettingsInstructionsViewModel
 
 @SuppressLint("InlinedApi")
 @Composable
 fun NavHostSetup(
     modifier: Modifier = Modifier,
-    vm: NavHostViewmodel = hiltViewModel(),
+    vmNav: NavHostViewmodel = hiltViewModel(),
+    vmSettings: SettingsInstructionsViewModel = hiltViewModel(),
     onRequestPermission: (permissionList: Array<String>) -> Unit,
+    onRequestBatteryOptimization: () -> Unit,
 ) {
     val navController = rememberNavController()
 
@@ -28,29 +33,44 @@ fun NavHostSetup(
         startDestination = NavRoute.Home
     ) {
         composable<NavRoute.Home> {
-            val stepCounterPermission = arrayOf(android.Manifest.permission.ACTIVITY_RECOGNITION)
-            val userActivityPermission = arrayOf(android.Manifest.permission.ACTIVITY_RECOGNITION)
+            val activityRecognitionPermission =
+                arrayOf(android.Manifest.permission.ACTIVITY_RECOGNITION)
             val locationPermission = arrayOf(
                 android.Manifest.permission.ACCESS_COARSE_LOCATION,
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
             )
+            val runningCounterPermission = arrayOf(
+                android.Manifest.permission.ACTIVITY_RECOGNITION,
+                android.Manifest.permission.FOREGROUND_SERVICE,
+                android.Manifest.permission.BODY_SENSORS,
+                android.Manifest.permission.FOREGROUND_SERVICE_HEALTH,
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+            )
             HomeScreen(
                 onStepCounterClick = {
-                    if (vm.checkPermissionsGranted(stepCounterPermission.toList()))
+                    if (vmNav.checkPermissionsGranted(activityRecognitionPermission))
                         navController.navigate(NavRoute.StepCounter)
-                    else onRequestPermission(stepCounterPermission)
+                    else onRequestPermission(activityRecognitionPermission)
                 },
                 onUserActivityClick = {
-                    if (vm.checkPermissionsGranted(userActivityPermission.toList()))
+                    if (vmNav.checkPermissionsGranted(activityRecognitionPermission))
                         navController.navigate(NavRoute.UserActivity)
-                    else onRequestPermission(userActivityPermission)
+                    else onRequestPermission(activityRecognitionPermission)
                 },
                 onLocationPermissionClick = {
-                    if (!vm.checkPermissionsGranted(locationPermission.toList()))
+                    if (!vmNav.checkPermissionsGranted(locationPermission))
                         onRequestPermission(locationPermission)
                 },
                 onSensorClick = {
                     navController.navigate(NavRoute.Sensor)
+                },
+                onRunningCounterClick = {
+                    if (vmNav.checkPermissionsGranted(activityRecognitionPermission)) {
+                        vmSettings.loadPermissionsGranted()
+                        if (!vmSettings.isBatteryOptimizationDisabled.value)
+                            navController.navigate(NavRoute.AppSettings)
+                        else navController.navigate(NavRoute.ServiceCounter)
+                    } else onRequestPermission(activityRecognitionPermission)
                 },
                 modifier = Modifier,
             )
@@ -70,5 +90,18 @@ fun NavHostSetup(
                 modifier = Modifier,
             )
         }
+        composable<NavRoute.ServiceCounter> {
+            ServiceCounterScreen(
+                modifier = Modifier,
+            )
+        }
+        composable<NavRoute.AppSettings> {
+            SettingsInstructionsScreen(
+                onBatteryOptimizationClick = { onRequestBatteryOptimization() },
+                onNextClick = { navController.navigate(NavRoute.ServiceCounter) },
+            )
+        }
     }
 }
+
+

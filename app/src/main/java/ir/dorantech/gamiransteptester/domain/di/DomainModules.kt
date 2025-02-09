@@ -6,14 +6,17 @@ import dagger.Provides
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.domain.repository.ActivityRecognitionRequestRepository
 import ir.dorantech.gamiransteptester.domain.repository.StepCounterRepository
 import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionRequestUseCase
 import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionUseCase
 import ir.dorantech.gamiransteptester.domain.usecase.PermissionUseCase
+import ir.dorantech.gamiransteptester.domain.usecase.SensorStepCountUseCase
 import ir.dorantech.gamiransteptester.domain.usecase.StepCountUseCase
 import ir.dorantech.gamiransteptester.domain.usecase.impl.ActivityRecognitionRequestUseCaseImpl
 import ir.dorantech.gamiransteptester.domain.usecase.impl.PermissionUseCaseImpl
+import ir.dorantech.gamiransteptester.domain.usecase.impl.SensorStepCountUseCaseImpl
 import ir.dorantech.gamiransteptester.domain.usecase.impl.StepCountUseCaseImpl
 
 @Module
@@ -36,6 +39,14 @@ object DomainModules {
         context: Context
     ): PermissionUseCase {
         return PermissionUseCaseImpl(context)
+    }
+
+    @Provides
+    fun provideSensorManagerUseCase(
+        context: Context,
+        logManager: LogManager
+    ): SensorStepCountUseCase {
+        return SensorStepCountUseCaseImpl(context, logManager)
     }
 }
 

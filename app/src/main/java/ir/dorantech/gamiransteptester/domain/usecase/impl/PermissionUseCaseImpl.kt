@@ -10,7 +10,7 @@ import javax.inject.Inject
 class PermissionUseCaseImpl @Inject constructor(
     @ApplicationContext val applicationContext: Context
 ) : PermissionUseCase {
-    override fun checkPermissionsGranted(permissions: List<String>): Boolean {
+    override fun checkPermissionsGranted(permissions: Array<String>): Boolean {
         return permissions.all { permission ->
             ContextCompat.checkSelfPermission(applicationContext, permission) == PackageManager.PERMISSION_GRANTED
         }

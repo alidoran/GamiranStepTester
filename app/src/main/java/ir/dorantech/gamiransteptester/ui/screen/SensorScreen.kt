@@ -9,11 +9,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import ir.dorantech.gamiransteptester.ui.viewmodel.SensorViewModel
+import ir.dorantech.gamiransteptester.ui.viewmodel.SensorEventViewModel
 
 @Composable
 fun SensorScreen(
-    vm: SensorViewModel = hiltViewModel(),
+    vm: SensorEventViewModel = hiltViewModel(),
     modifier: Modifier.Companion
 ) {
     Column(
