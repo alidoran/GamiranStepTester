@@ -5,25 +5,22 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
-import android.os.Binder
 
 import android.os.IBinder
 import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.AndroidEntryPoint
 import ir.dorantech.gamiransteptester.R
-import ir.dorantech.gamiransteptester.core.broadcast.manager.RunningBroadcastManager
-import ir.dorantech.gamiransteptester.core.broadcast.manager.impl.RunningBroadcastManagerImpl
+import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
+import ir.dorantech.gamiransteptester.core.datastore.PreferencesHelper
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.core.model.ResultCallback
 import ir.dorantech.gamiransteptester.domain.model.UseCaseResult
 import ir.dorantech.gamiransteptester.domain.usecase.SensorStepCountUseCase
-import ir.dorantech.gamiransteptester.util.ActivityType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,46 +33,58 @@ class StepCountingService : Service() {
     lateinit var sensorStepCountUseCase: SensorStepCountUseCase
 
     @Inject
-    lateinit var runningBroadcastManager: RunningBroadcastManager
+    lateinit var activityTypeBroadcastManager: ActivityTypeBroadcastManager
 
-    private val binder = StepCountingBinder()
+    @Inject
+    lateinit var preferencesHelper: PreferencesHelper
 
-    private var isRunning = false
+    private var isWalking = false
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val _counterState = MutableStateFlow(0)
-    val counterState = _counterState.asStateFlow()
-    private var runningFlag = false
+    private var walkingFlag = false
     private var startCounter = 0
     private var accuracy = 0
-
+    private var totalCount = 0
 
     override fun onCreate() {
         super.onCreate()
         logManager.addLog("StepCounterManager: Service created!")
     }
 
+    private fun getTotalCounter() {
+        serviceScope.launch {
+            totalCount = preferencesHelper.getTotalSteps().first()
+        }
+    }
+
+    private fun saveTotalCounter(counter: Int) {
+        serviceScope.launch {
+            preferencesHelper.setTotalSteps(counter)
+        }
+    }
+
     private fun initSensorManager(): Boolean {
         when (val result = sensorStepCountUseCase()) {
             is UseCaseResult.Success -> {
-                CoroutineScope(Dispatchers.IO).launch {
+                serviceScope.launch {
                     result.data.steps.collect {
-//                        logManager.addLog("StepCounterManager From Sensor manager: $it")
-                        val shouldStart = isRunning && accuracy > 1
-                        logManager.addLog("isRunning: $isRunning")
-                        if ((shouldStart)) {
-                            logManager.addLog("TOTAL COUNT: ${counterState.value}")
-                            if (!runningFlag) {
+//                        logManager.addLog("isWalking: $isWalking & accuracy: $accuracy")
+                        if ((isWalking && accuracy >= 1)) {
+                            if (!walkingFlag) {
+                                walkingFlag = true
                                 startCounter = it
-                                runningFlag = true
+                                getTotalCounter()
+                                logManager.addLog("StartCount = $it & TotalCount = $totalCount")
                             } else {
-                                _counterState.value += (it - startCounter)
-                                startCounter = it
+                                saveTotalCounter(totalCount + (it - startCounter))
                             }
-                        } else runningFlag = false
-
+                        } else if (walkingFlag) {
+                            logManager.addLog("StepCounterManager stop: $it")
+                            walkingFlag = false
+                            totalCount = 0
+                        }
                     }
                 }
-                CoroutineScope(Dispatchers.IO).launch {
+                serviceScope.launch {
                     result.data.accuracy.collect {
 //                        logManager.addLog("StepCounterManager From Sensor manager: $it")
                         accuracy = it
@@ -94,7 +103,7 @@ class StepCountingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         if (!initSensorManager()) stopSelf()
-        registerRunningBroadcast()
+        registerWalkingBroadcast()
 
         logManager.addLog("onStartCommand is called")
         val channelId = "Foreground channelId"
@@ -106,7 +115,7 @@ class StepCountingService : Service() {
 
         val notification = Notification
             .Builder(this, channelId)
-            .setContentText("StepCounter is running")
+            .setContentText("StepCounter is walking")
             .setContentTitle("StepCounter service is enable")
             .setSmallIcon(R.drawable.ic_launcher_background)
             .build()
@@ -119,7 +128,8 @@ class StepCountingService : Service() {
         super.onDestroy()
         logManager.addLog("onDestroy is called")
         sensorStepCountUseCase.unregisterStepListener()
-        runningBroadcastManager.unregisterRunningBroadcast(object : ResultCallback<String> {
+        activityTypeBroadcastManager.unregisterActivityTypeBroadcast(object :
+            ResultCallback<String> {
             override fun onSuccess(data: String) {
                 logManager.addLog(data)
             }
@@ -132,14 +142,12 @@ class StepCountingService : Service() {
         serviceScope.cancel()
     }
 
-    override fun onBind(intent: Intent?): IBinder {
-        return binder
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun registerRunningBroadcast() {
-        runningBroadcastManager.registerRunningBroadcast(object : ResultCallback<String> {
+    private fun registerWalkingBroadcast() {
+        activityTypeBroadcastManager.registerActivityTypeBroadcast(object : ResultCallback<String> {
             override fun onSuccess(data: String) {
-                logManager.addLog("registerRunningBroadcast: $data")
+                logManager.addLog("registerWalkingBroadcast: $data")
                 getBroadcastResult()
             }
 
@@ -151,16 +159,12 @@ class StepCountingService : Service() {
 
     private fun getBroadcastResult() {
         serviceScope.launch {
-            runningBroadcastManager.getBroadcastResult().collect {
-                isRunning = (it?.detectedActivity == DetectedActivity.RUNNING && it.confidence >= 9)
-                logManager.addLog("isRunning: $isRunning with confidence: ${it?.confidence} and activity: ${it?.let { ActivityType.fromInt(it.detectedActivity) }}")
+            activityTypeBroadcastManager.broadcastResultState.collect {
+                if (it != null && it.detectedActivity == DetectedActivity.WALKING) {
+                    isWalking = it.confidence >= 70
+                    logManager.addLog("IS_WALKING = $isWalking & confidence: ${it.confidence}")
+                }
             }
-        }
-    }
-
-    inner class StepCountingBinder : Binder() {
-        fun getService(): StepCountingService {
-            return this@StepCountingService
         }
     }
 }

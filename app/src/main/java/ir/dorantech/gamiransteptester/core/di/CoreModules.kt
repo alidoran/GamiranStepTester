@@ -5,8 +5,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import ir.dorantech.gamiransteptester.core.broadcast.manager.RunningBroadcastManager
-import ir.dorantech.gamiransteptester.core.broadcast.manager.impl.RunningBroadcastManagerImpl
+import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
+import ir.dorantech.gamiransteptester.core.broadcast.manager.impl.ActivityTypeBroadcastManagerImpl
+import ir.dorantech.gamiransteptester.core.datastore.PreferencesHelper
+import ir.dorantech.gamiransteptester.core.datastore.impl.PreferencesHelperImpl
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import javax.inject.Singleton
 
@@ -20,7 +22,13 @@ object CoreModules {
 
     @Singleton
     @Provides
-    fun provideRunningBroadcastManager(context: Context, logManager: LogManager): RunningBroadcastManager {
-        return RunningBroadcastManagerImpl(context, logManager)
+    fun provideRunningBroadcastManager(context: Context, logManager: LogManager): ActivityTypeBroadcastManager {
+        return ActivityTypeBroadcastManagerImpl(context, logManager)
+    }
+
+    @Singleton
+    @Provides
+    fun ProvidePreferencesHelper(context: Context): PreferencesHelper{
+        return PreferencesHelperImpl(context)
     }
 }
