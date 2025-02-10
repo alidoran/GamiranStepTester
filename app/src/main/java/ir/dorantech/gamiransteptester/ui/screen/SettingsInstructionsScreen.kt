@@ -19,13 +19,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import ir.dorantech.gamiransteptester.core.navigation.NavRoute
 import ir.dorantech.gamiransteptester.ui.viewmodel.SettingsInstructionsViewModel
 
 @Composable
 fun SettingsInstructionsScreen(
     vm: SettingsInstructionsViewModel = hiltViewModel(),
-    onBatteryOptimizationClick: () -> Unit,
     onNextClick: () -> Unit,
 ) {
     Column(
@@ -54,7 +52,7 @@ fun SettingsInstructionsScreen(
         val isBatteryOptimizationDisabled = vm.isBatteryOptimizationDisabled.collectAsState()
 
         Button(
-            onClick = onBatteryOptimizationClick,
+            onClick = { vm.openBatteryOptimizationSettings() },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isBatteryOptimizationDisabled.value,
         ) {
@@ -64,8 +62,16 @@ fun SettingsInstructionsScreen(
             )
         }
 
-        val isAllConditionsMet = vm.isAllConditionsMet.collectAsState()
+        val isAutoStartOpened = vm.isAutoStartOpened.collectAsState()
+        Button(
+            onClick = { vm.onAutoStartSetting() },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isAutoStartOpened.value,
+        ) {
+            Text(text = "Go to Auto Start Settings")
+        }
 
+        val isAllConditionsMet = vm.isAllConditionsMet.collectAsState()
         Button(
             onClick = onNextClick,
             enabled = isAllConditionsMet.value,
@@ -94,7 +100,6 @@ fun SettingsInstructionsScreen(
 @Preview
 fun SettingsInstructionsScreenPreview() {
     SettingsInstructionsScreen(
-        onBatteryOptimizationClick = {},
         onNextClick = {},
     )
 }

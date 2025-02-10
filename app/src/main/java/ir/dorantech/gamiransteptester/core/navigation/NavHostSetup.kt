@@ -23,7 +23,6 @@ fun NavHostSetup(
     vmNav: NavHostViewmodel = hiltViewModel(),
     vmSettings: SettingsInstructionsViewModel = hiltViewModel(),
     onRequestPermission: (permissionList: Array<String>) -> Unit,
-    onRequestBatteryOptimization: () -> Unit,
 ) {
     val navController = rememberNavController()
 
@@ -37,13 +36,6 @@ fun NavHostSetup(
                 arrayOf(android.Manifest.permission.ACTIVITY_RECOGNITION)
             val locationPermission = arrayOf(
                 android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-            )
-            val runningCounterPermission = arrayOf(
-                android.Manifest.permission.ACTIVITY_RECOGNITION,
-                android.Manifest.permission.FOREGROUND_SERVICE,
-                android.Manifest.permission.BODY_SENSORS,
-                android.Manifest.permission.FOREGROUND_SERVICE_HEALTH,
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
             )
             HomeScreen(
@@ -67,7 +59,7 @@ fun NavHostSetup(
                 onRunningCounterClick = {
                     if (vmNav.checkPermissionsGranted(activityRecognitionPermission)) {
                         vmSettings.loadPermissionsGranted()
-                        if (!vmSettings.isBatteryOptimizationDisabled.value)
+                        if (!vmSettings.isBatteryOptimizationDisabled.value || !vmSettings.isAutoStartOpened.value)
                             navController.navigate(NavRoute.AppSettings)
                         else navController.navigate(NavRoute.ServiceCounter)
                     } else onRequestPermission(activityRecognitionPermission)
@@ -97,7 +89,6 @@ fun NavHostSetup(
         }
         composable<NavRoute.AppSettings> {
             SettingsInstructionsScreen(
-                onBatteryOptimizationClick = { onRequestBatteryOptimization() },
                 onNextClick = { navController.navigate(NavRoute.ServiceCounter) },
             )
         }

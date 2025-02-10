@@ -1,9 +1,7 @@
 package ir.dorantech.gamiransteptester.ui.activity
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +29,9 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var logManager: LogManager
+
     private val mainActivityViewModel: MainActivityViewModel by viewModels()
     private val registerForActivityResult = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -68,9 +69,6 @@ class MainActivity : ComponentActivity() {
                     .weight(3f)
                     .fillMaxSize(),
                 onRequestPermission = { onRequestPermissions(it) },
-                onRequestBatteryOptimization = {
-                    openBatteryOptimizationSettings()
-                }
             )
 
             LazyColumn(
@@ -94,11 +92,5 @@ class MainActivity : ComponentActivity() {
         }
         if (runningQOrLater) registerForActivityResult.launch(permissionList)
         else mainActivityViewModel.addLogToList("All permissions granted")
-    }
-
-    private fun openBatteryOptimizationSettings() {
-        val intent = Intent()
-        intent.action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
-        startActivity(intent)
     }
 }

@@ -101,7 +101,6 @@ class StepCountingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         if (!initSensorManager()) stopSelf()
         registerWalkingBroadcast()
 
@@ -121,7 +120,7 @@ class StepCountingService : Service() {
             .build()
 
         startForeground(1001, notification)
-        return super.onStartCommand(intent, flags, startId)
+        return START_STICKY
     }
 
     override fun onDestroy() {
