@@ -11,9 +11,9 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!--Running counter needed permission-->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.BODY_SENSORS"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
@@ -34,33 +34,36 @@
             android:theme="@style/Theme.GamiranStepTester">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".core.broadcast.receiver.ActivityRecognitionReceiver"
+
+        <receiver
+            android:name=".core.broadcast.receiver.ActivityRecognitionReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".core.broadcast.receiver.ActivityTypeBroadcastReceiver"
+        <receiver
+            android:name=".core.broadcast.receiver.ActivityTypeBroadcastReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS2" />
             </intent-filter>
         </receiver>
+
         <service
             android:name=".core.services.StepCountingService"
-            android:foregroundServiceType= "health"
             android:exported="true"
+            android:foregroundServiceType="health"
             android:permission="android.permission.BIND_JOB_SERVICE">
             <intent-filter>
                 <action android:name=".core.services.StepCountingService" />
             </intent-filter>
             <meta-data
                 android:name="androidx.work.impl.workers.ServiceWorker"
-                android:value="true"/>
+                android:value="true" />
         </service>
     </application>
 </manifest>
