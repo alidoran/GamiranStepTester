@@ -69,5 +69,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.play.services.location)
+    implementation(libs.data.store)
     ksp(libs.hilt.compiler)
 }

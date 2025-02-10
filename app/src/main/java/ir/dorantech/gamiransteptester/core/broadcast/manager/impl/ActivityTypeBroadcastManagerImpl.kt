@@ -6,28 +6,29 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.google.android.gms.location.ActivityRecognition
-import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.qualifiers.ApplicationContext
-import ir.dorantech.gamiransteptester.core.broadcast.manager.RunningBroadcastManager
-import ir.dorantech.gamiransteptester.core.broadcast.model.RunningBroadcastResult
-import ir.dorantech.gamiransteptester.core.broadcast.receiver.ActivityTypeReceiver
+import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
+import ir.dorantech.gamiransteptester.core.broadcast.model.ActivityTypeBroadcastResult
+import ir.dorantech.gamiransteptester.core.broadcast.receiver.ActivityTypeBroadcastReceiver
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.core.model.ResultCallback
 import ir.dorantech.gamiransteptester.core.model.ResultModel
-import ir.dorantech.gamiransteptester.util.ActivityType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
-class RunningBroadcastManagerImpl @Inject constructor(
+class ActivityTypeBroadcastManagerImpl @Inject constructor(
     @ApplicationContext val context: Context,
     val logManager: LogManager
-): RunningBroadcastManager {
-    private val broadcastResultState = MutableStateFlow<RunningBroadcastResult?>(null)
+) : ActivityTypeBroadcastManager {
+    private val _broadcastResult = MutableStateFlow<ActivityTypeBroadcastResult?>(null)
+    override val broadcastResultState: StateFlow<ActivityTypeBroadcastResult?> =
+        _broadcastResult.asStateFlow()
     private lateinit var pendingIntent: PendingIntent
 
     @SuppressLint("MissingPermission")
-    override fun registerRunningBroadcast(callback: ResultCallback<String>) {
+    override fun registerActivityTypeBroadcast(callback: ResultCallback<String>) {
         pendingIntent = getPendingIntent()
         val task = ActivityRecognition.getClient(context)
             .requestActivityUpdates(10000L, pendingIntent)
@@ -46,7 +47,7 @@ class RunningBroadcastManagerImpl @Inject constructor(
     private fun getPendingIntent(): PendingIntent {
         val intentAction2 =
             "ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS2"
-        val intent = Intent(context, ActivityTypeReceiver::class.java).apply {
+        val intent = Intent(context, ActivityTypeBroadcastReceiver::class.java).apply {
             action = intentAction2
         }
         val flags =
@@ -64,7 +65,7 @@ class RunningBroadcastManagerImpl @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    override fun unregisterRunningBroadcast(callback: ResultCallback<String>) {
+    override fun unregisterActivityTypeBroadcast(callback: ResultCallback<String>) {
         val client = ActivityRecognition.getClient(context)
         val task = client.removeActivityTransitionUpdates(pendingIntent)
         task.addOnSuccessListener {
@@ -78,25 +79,10 @@ class RunningBroadcastManagerImpl @Inject constructor(
         }
     }
 
-    override fun getBroadcastResponse(broadcastResult: ResultModel<RunningBroadcastResult>) {
+    override suspend fun setBroadcastResult(broadcastResult: ResultModel<ActivityTypeBroadcastResult>) {
         when (broadcastResult) {
-            is ResultModel.Success -> {
-                val detectActivity = ActivityType.fromInt(broadcastResult.data.detectedActivity)
-                if (broadcastResultState.value != broadcastResult.data){
-                if (broadcastResult.data.detectedActivity == DetectedActivity.RUNNING) {
-                    logManager.addLog("DetectActivity: $detectActivity")
-                    logManager.addLog("confidence: ${broadcastResult.data.confidence}")
-                }
-                broadcastResultState.value = broadcastResult.data
-            }else logManager.addLog("The same values")
-            }
-
-            is ResultModel.Error -> {
-                logManager.addLog("Broadcast Failed: ${broadcastResult.message}")
-                broadcastResultState.value = null
-            }
+            is ResultModel.Success -> _broadcastResult.emit(broadcastResult.data)
+            is ResultModel.Error -> logManager.addLog("Broadcast Failed: ${broadcastResult.message}")
         }
     }
-
-    override suspend fun getBroadcastResult(): StateFlow<RunningBroadcastResult?> = broadcastResultState
 }

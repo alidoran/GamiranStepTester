@@ -44,7 +44,7 @@
                 <action android:name="ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".core.broadcast.receiver.ActivityTypeReceiver"
+        <receiver android:name=".core.broadcast.receiver.ActivityTypeBroadcastReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS2" />

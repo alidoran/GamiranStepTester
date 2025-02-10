@@ -1,6 +1,6 @@
 package ir.dorantech.gamiransteptester.core.broadcast.model
 
-data class RunningBroadcastResult(
+data class ActivityTypeBroadcastResult(
     val detectedActivity: Int,
     val confidence: Int,
 )
