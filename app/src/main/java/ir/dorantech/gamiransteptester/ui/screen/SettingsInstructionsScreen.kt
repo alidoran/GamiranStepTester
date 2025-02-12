@@ -1,5 +1,6 @@
 package ir.dorantech.gamiransteptester.ui.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,12 +20,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import ir.dorantech.gamiransteptester.core.model.Permission
 import ir.dorantech.gamiransteptester.ui.viewmodel.SettingsInstructionsViewModel
 
+@SuppressLint("InlinedApi")
 @Composable
 fun SettingsInstructionsScreen(
     vm: SettingsInstructionsViewModel = hiltViewModel(),
-    onNextClick: () -> Unit,
+    onBackClick: () -> Unit = {},
+    neededPermissions: Array<Permission>,
+    onRequestPermission: (permissionList: Array<Permission>) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -49,43 +54,78 @@ fun SettingsInstructionsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val isBatteryOptimizationDisabled = vm.isBatteryOptimizationDisabled.collectAsState()
-
-        Button(
-            onClick = { vm.openBatteryOptimizationSettings() },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isBatteryOptimizationDisabled.value,
-        ) {
-            Text(
-                text = if (isBatteryOptimizationDisabled.value) "Battery Optimization is disabled"
-                else "Go to Battery Optimization Settings"
-            )
+        if (neededPermissions.contains(Permission.BATTERY_OPTIMIZATION)) {
+            val isBatteryOptimizationDisabled = vm.isBatteryOptimizationDisabled.collectAsState()
+            Button(
+                onClick = { vm.openBatteryOptimizationSettings() },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isBatteryOptimizationDisabled.value,
+            ) {
+                Text(
+                    text = if (isBatteryOptimizationDisabled.value) "Battery Optimization is disabled"
+                    else "Go to Battery Optimization Settings"
+                )
+            }
         }
 
-        val isAutoStartOpened = vm.isAutoStartOpened.collectAsState()
-        Button(
-            onClick = { vm.onAutoStartSetting() },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isAutoStartOpened.value,
-        ) {
-            Text(text = "Go to Auto Start Settings")
+        if (neededPermissions.contains(Permission.AUTO_START)) {
+            val isAutoStartOpened = vm.isAutoStartOpened.collectAsState()
+            Button(
+                onClick = { vm.onAutoStartSetting() },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isAutoStartOpened.value,
+            ) {
+                Text(text = "Go to Auto Start Settings")
+            }
+        }
+
+        if (neededPermissions.contains(Permission.ACTIVITY_RECOGNITION)) {
+            val isActivityRecognitionEnabled = vm.isActivityRecognitionEnabled.collectAsState()
+            Button(
+                onClick = { onRequestPermission(arrayOf(Permission.ACTIVITY_RECOGNITION)) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isActivityRecognitionEnabled.value,
+            ) {
+                Text(text = "Go to Activity Recognition Settings")
+            }
+        }
+
+        if (neededPermissions.contains(Permission.ACCESS_COARSE_LOCATION)) {
+            val isCoarseLocationEnabled = vm.isCoarseLocationEnabled.collectAsState()
+            Button(
+                onClick = { onRequestPermission(arrayOf(Permission.ACCESS_COARSE_LOCATION)) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isCoarseLocationEnabled.value,
+            ) {
+                Text(text = "Go to Coarse Location Settings")
+            }
+        }
+
+        if (neededPermissions.contains(Permission.ACCESS_FINE_LOCATION)) {
+            val isFineLocationEnabled = vm.isFineLocationEnabled.collectAsState()
+            Button(
+                onClick = { onRequestPermission(arrayOf(Permission.ACCESS_FINE_LOCATION)) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isFineLocationEnabled.value,
+            ) {
+                Text(text = "Go to Fine Location Settings")
+            }
         }
 
         val isAllConditionsMet = vm.isAllConditionsMet.collectAsState()
         Button(
-            onClick = onNextClick,
+            onClick = onBackClick,
             enabled = isAllConditionsMet.value,
         ) {
-            Text(text = "Next")
+            Text(text = "Back")
         }
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                vm.loadPermissionsGranted()
+                vm.loadAllNeededConditionsMet(neededPermissions)
             }
         }
 
@@ -100,6 +140,7 @@ fun SettingsInstructionsScreen(
 @Preview
 fun SettingsInstructionsScreenPreview() {
     SettingsInstructionsScreen(
-        onNextClick = {},
+        neededPermissions = arrayOf(Permission.ACTIVITY_RECOGNITION),
+        onRequestPermission = {},
     )
 }

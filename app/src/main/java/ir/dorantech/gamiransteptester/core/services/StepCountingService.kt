@@ -166,4 +166,8 @@ class StepCountingService : Service() {
             }
         }
     }
+
+    override fun onTimeout(startId: Int) {
+        super.onTimeout(startId)
+    }
 }
