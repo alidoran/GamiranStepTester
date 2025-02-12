@@ -1,6 +1,5 @@
 package ir.dorantech.gamiransteptester.ui.activity
 
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import dagger.hilt.android.AndroidEntryPoint
 import ir.dorantech.gamiransteptester.core.logging.LogManager
+import ir.dorantech.gamiransteptester.core.model.Permission
 import ir.dorantech.gamiransteptester.core.navigation.NavHostSetup
 import ir.dorantech.gamiransteptester.domain.usecase.ActivityRecognitionUseCase
 import ir.dorantech.gamiransteptester.ui.theme.GamiranStepTesterTheme
@@ -83,14 +83,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun onRequestPermissions(permissionList: Array<String>) {
-        val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-        for (permission in permissionList) {
-            mainActivityViewModel.addLogToList(
-                "Requested permission: ${permission.substringAfterLast('.')}"
-            )
-        }
-        if (runningQOrLater) registerForActivityResult.launch(permissionList)
-        else mainActivityViewModel.addLogToList("All permissions granted")
+    private fun onRequestPermissions(permissionList: Array<Permission>) {
+        val permissions = permissionList.map { it.androidName }.toTypedArray()
+        registerForActivityResult.launch(permissions)
     }
 }

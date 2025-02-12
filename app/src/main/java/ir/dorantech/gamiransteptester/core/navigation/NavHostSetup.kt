@@ -7,24 +7,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import ir.dorantech.gamiransteptester.core.model.Permission
 import ir.dorantech.gamiransteptester.ui.screen.HomeScreen
 import ir.dorantech.gamiransteptester.ui.screen.ServiceCounterScreen
 import ir.dorantech.gamiransteptester.ui.screen.SensorScreen
 import ir.dorantech.gamiransteptester.ui.screen.SettingsInstructionsScreen
 import ir.dorantech.gamiransteptester.ui.screen.StepCountScreen
 import ir.dorantech.gamiransteptester.ui.screen.UserActivityScreen
-import ir.dorantech.gamiransteptester.ui.viewmodel.NavHostViewmodel
 import ir.dorantech.gamiransteptester.ui.viewmodel.SettingsInstructionsViewModel
 
 @SuppressLint("InlinedApi")
 @Composable
 fun NavHostSetup(
     modifier: Modifier = Modifier,
-    vmNav: NavHostViewmodel = hiltViewModel(),
     vmSettings: SettingsInstructionsViewModel = hiltViewModel(),
-    onRequestPermission: (permissionList: Array<String>) -> Unit,
+    onRequestPermission: (permissionList: Array<Permission>) -> Unit,
 ) {
     val navController = rememberNavController()
+    var neededPermissions: Array<Permission> = emptyArray()
 
     NavHost(
         modifier = modifier,
@@ -32,37 +32,44 @@ fun NavHostSetup(
         startDestination = NavRoute.Home
     ) {
         composable<NavRoute.Home> {
-            val activityRecognitionPermission =
-                arrayOf(android.Manifest.permission.ACTIVITY_RECOGNITION)
-            val locationPermission = arrayOf(
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-            )
             HomeScreen(
                 onStepCounterClick = {
-                    if (vmNav.checkPermissionsGranted(activityRecognitionPermission))
+                    neededPermissions = arrayOf(Permission.ACTIVITY_RECOGNITION)
+                    vmSettings.loadAllNeededConditionsMet(neededPermissions)
+                    if (vmSettings.isAllConditionsMet.value)
                         navController.navigate(NavRoute.StepCounter)
-                    else onRequestPermission(activityRecognitionPermission)
+                    else navController.navigate(NavRoute.AppSettings)
                 },
                 onUserActivityClick = {
-                    if (vmNav.checkPermissionsGranted(activityRecognitionPermission))
+                    neededPermissions = arrayOf(Permission.ACTIVITY_RECOGNITION)
+                    vmSettings.loadAllNeededConditionsMet(neededPermissions)
+                    if (vmSettings.isAllConditionsMet.value)
                         navController.navigate(NavRoute.UserActivity)
-                    else onRequestPermission(activityRecognitionPermission)
+                    else navController.navigate(NavRoute.AppSettings)
                 },
                 onLocationPermissionClick = {
-                    if (!vmNav.checkPermissionsGranted(locationPermission))
-                        onRequestPermission(locationPermission)
+                    neededPermissions = arrayOf(
+                        Permission.ACCESS_COARSE_LOCATION,
+                        Permission.ACCESS_FINE_LOCATION,
+                    )
+                    vmSettings.loadAllNeededConditionsMet(neededPermissions)
+                    if (vmSettings.isAllConditionsMet.value)
+                        vmSettings.toastMessage("All permissions granted")
+                    else navController.navigate(NavRoute.AppSettings)
                 },
                 onSensorClick = {
                     navController.navigate(NavRoute.Sensor)
                 },
                 onRunningCounterClick = {
-                    if (vmNav.checkPermissionsGranted(activityRecognitionPermission)) {
-                        vmSettings.loadPermissionsGranted()
-                        if (!vmSettings.isBatteryOptimizationDisabled.value || !vmSettings.isAutoStartOpened.value)
-                            navController.navigate(NavRoute.AppSettings)
-                        else navController.navigate(NavRoute.ServiceCounter)
-                    } else onRequestPermission(activityRecognitionPermission)
+                    neededPermissions = arrayOf(
+                        Permission.ACTIVITY_RECOGNITION,
+                        Permission.BATTERY_OPTIMIZATION,
+                        Permission.AUTO_START
+                    )
+                    vmSettings.loadAllNeededConditionsMet(neededPermissions)
+                    if (vmSettings.isAllConditionsMet.value)
+                        navController.navigate(NavRoute.ServiceCounter)
+                    else navController.navigate(NavRoute.AppSettings)
                 },
                 modifier = Modifier,
             )
@@ -89,10 +96,10 @@ fun NavHostSetup(
         }
         composable<NavRoute.AppSettings> {
             SettingsInstructionsScreen(
-                onNextClick = { navController.navigate(NavRoute.ServiceCounter) },
+                onBackClick = { navController.popBackStack() },
+                neededPermissions = neededPermissions,
+                onRequestPermission = onRequestPermission,
             )
         }
     }
 }
-
-
