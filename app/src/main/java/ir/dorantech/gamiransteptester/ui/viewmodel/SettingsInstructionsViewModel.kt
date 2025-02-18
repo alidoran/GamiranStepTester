@@ -37,9 +37,12 @@ class SettingsInstructionsViewModel @Inject constructor(
     val isFineLocationEnabled: StateFlow<Boolean> = _isFineLocationEnabled
     private val _isAllConditionsMet = MutableStateFlow(false)
     val isAllConditionsMet: StateFlow<Boolean> = _isAllConditionsMet
+    private val _isPostNotificationsEnabled = MutableStateFlow(false)
+    val isPostNotificationsEnabled: StateFlow<Boolean> = _isPostNotificationsEnabled
     private val _isAutoStartOpened = MutableStateFlow(false)
     val isAutoStartOpened: StateFlow<Boolean> = _isAutoStartOpened
-    private lateinit var neededPermissions: Array<Permission>
+    var neededPermissions: Array<Permission> = emptyArray()
+        private set
 
     private fun loadBatteryOptimizationStatus() {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -56,48 +59,68 @@ class SettingsInstructionsViewModel @Inject constructor(
     }
 
     private fun loadActivityRecognitionStatus() {
-        _isActivityRecognitionEnabled.value =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            _isActivityRecognitionEnabled.value =
                 permissionUseCase.checkPermissionsGranted(
                     arrayOf(Permission.ACTIVITY_RECOGNITION)
                 )
-            else true
+        } else {
+            _isActivityRecognitionEnabled.value = true
+            this.loadAllNeededConditionsMet()
+        }
     }
 
-    private fun loadCoarseLocationStatus(){
+    private fun loadCoarseLocationStatus() {
         _isCoarseLocationEnabled.value =
-                permissionUseCase.checkPermissionsGranted(
-                    arrayOf(Permission.ACCESS_COARSE_LOCATION))
+            permissionUseCase.checkPermissionsGranted(
+                arrayOf(Permission.ACCESS_COARSE_LOCATION)
+            )
     }
 
-    private fun loadFineLocationStatus(){
+    private fun loadFineLocationStatus() {
         _isFineLocationEnabled.value =
             permissionUseCase.checkPermissionsGranted(
-                arrayOf(Permission.ACCESS_COARSE_LOCATION))
+                arrayOf(Permission.ACCESS_COARSE_LOCATION)
+            )
     }
 
-    fun loadAllNeededConditionsMet(permissionList: Array<Permission>) {
+    private fun loadPostNotificationsStatus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            _isPostNotificationsEnabled.value =
+                permissionUseCase.checkPermissionsGranted(
+                    arrayOf(Permission.POST_NOTIFICATIONS)
+                )
+        } else {
+            _isPostNotificationsEnabled.value = true
+            this.loadAllNeededConditionsMet()
+        }
+    }
+
+    fun loadAllNeededConditionsMet() {
         val statusMap = mapOf(
             Permission.ACTIVITY_RECOGNITION to ::loadActivityRecognitionStatus,
             Permission.ACCESS_COARSE_LOCATION to ::loadCoarseLocationStatus,
             Permission.ACCESS_FINE_LOCATION to ::loadFineLocationStatus,
             Permission.BATTERY_OPTIMIZATION to ::loadBatteryOptimizationStatus,
             Permission.AUTO_START to ::loadAutoStartStatus,
+            Permission.POST_NOTIFICATIONS to ::loadPostNotificationsStatus,
         )
 
-        permissionList.forEach { permission ->
+        neededPermissions.forEach { permission ->
             statusMap[permission]?.invoke()
         }
 
-        _isAllConditionsMet.value = permissionList.all { permission ->
-            when (permission) {
-                Permission.ACCESS_COARSE_LOCATION -> _isCoarseLocationEnabled.value
-                Permission.ACCESS_FINE_LOCATION -> _isFineLocationEnabled.value
-                Permission.ACTIVITY_RECOGNITION -> _isActivityRecognitionEnabled.value
-                Permission.BATTERY_OPTIMIZATION -> _isBatteryOptimizationDisabled.value
-                Permission.AUTO_START -> _isAutoStartOpened.value
+        _isAllConditionsMet.value =
+            neededPermissions.isNotEmpty() && neededPermissions.all { permission ->
+                when (permission) {
+                    Permission.ACCESS_COARSE_LOCATION -> _isCoarseLocationEnabled.value
+                    Permission.ACCESS_FINE_LOCATION -> _isFineLocationEnabled.value
+                    Permission.ACTIVITY_RECOGNITION -> _isActivityRecognitionEnabled.value
+                    Permission.BATTERY_OPTIMIZATION -> _isBatteryOptimizationDisabled.value
+                    Permission.AUTO_START -> _isAutoStartOpened.value
+                    Permission.POST_NOTIFICATIONS -> _isPostNotificationsEnabled.value
+                }
             }
-        }
     }
 
     fun onAutoStartSetting() {
@@ -116,7 +139,7 @@ class SettingsInstructionsViewModel @Inject constructor(
         } catch (_: Exception) {
             logManager.addLog("No need to open auto start")
             _isAutoStartOpened.value = true
-            loadAllNeededConditionsMet(neededPermissions)
+            loadAllNeededConditionsMet()
         }
     }
 
@@ -126,7 +149,11 @@ class SettingsInstructionsViewModel @Inject constructor(
         context.startActivity(intent)
     }
 
-    fun toastMessage(message: String){
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    fun updateNeededPermissions(neededPermissions: Array<Permission>, onChecked: () -> Unit) {
+        this.neededPermissions = neededPermissions
+        viewModelScope.launch {
+            loadAllNeededConditionsMet()
+            onChecked()
+        }
     }
 }
