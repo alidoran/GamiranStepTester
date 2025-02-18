@@ -28,7 +28,7 @@ object CoreModules {
 
     @Singleton
     @Provides
-    fun ProvidePreferencesHelper(context: Context): PreferencesHelper{
+    fun providePreferencesHelper(context: Context): PreferencesHelper{
         return PreferencesHelperImpl(context)
     }
 }

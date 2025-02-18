@@ -9,7 +9,6 @@ import android.content.Intent
 import android.os.IBinder
 import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.AndroidEntryPoint
-import ir.dorantech.gamiransteptester.R
 import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
 import ir.dorantech.gamiransteptester.core.datastore.PreferencesHelper
 import ir.dorantech.gamiransteptester.core.logging.LogManager
@@ -44,22 +43,43 @@ class StepCountingService : Service() {
     private var startCounter = 0
     private var accuracy = 0
     private var totalCount = 0
+    private var stopWalkingCounter = 3
+    private var lastLocalDateTime = 0L
 
-    override fun onCreate() {
-        super.onCreate()
-        logManager.addLog("StepCounterManager: Service created!")
+    private companion object {
+        private const val CHANNEL_ID = "foreground_service_channel"
     }
 
-    private fun getTotalCounter() {
-        serviceScope.launch {
-            totalCount = preferencesHelper.getTotalSteps().first()
-        }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!initSensorManager()) stopSelf()
+        registerWalkingBroadcast()
+        logManager.addLog("onStartCommand is called")
+        startForegroundService()
+        return START_STICKY
     }
 
-    private fun saveTotalCounter(counter: Int) {
-        serviceScope.launch {
-            preferencesHelper.setTotalSteps(counter)
-        }
+    private fun startForegroundService() {
+        createNotificationChannel()
+        val notification = Notification
+            .Builder(this, CHANNEL_ID)
+            .setContentText("StepCounter is walking")
+            .setContentTitle("StepCounter service is enable")
+            .setSmallIcon(android.R.drawable.ic_notification_overlay)
+            .build()
+
+        startForeground(584264, notification)
+    }
+
+    private fun createNotificationChannel() {
+        val notificationChannel =
+            NotificationChannel(
+                CHANNEL_ID,
+                "Foreground Service",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(
+            notificationChannel
+        )
     }
 
     private fun initSensorManager(): Boolean {
@@ -67,26 +87,11 @@ class StepCountingService : Service() {
             is UseCaseResult.Success -> {
                 serviceScope.launch {
                     result.data.steps.collect {
-//                        logManager.addLog("isWalking: $isWalking & accuracy: $accuracy")
-                        if ((isWalking && accuracy >= 1)) {
-                            if (!walkingFlag) {
-                                walkingFlag = true
-                                startCounter = it
-                                getTotalCounter()
-                                logManager.addLog("StartCount = $it & TotalCount = $totalCount")
-                            } else {
-                                saveTotalCounter(totalCount + (it - startCounter))
-                            }
-                        } else if (walkingFlag) {
-                            logManager.addLog("StepCounterManager stop: $it")
-                            walkingFlag = false
-                            totalCount = 0
-                        }
+                        handleStepCount(it)
                     }
                 }
                 serviceScope.launch {
                     result.data.accuracy.collect {
-//                        logManager.addLog("StepCounterManager From Sensor manager: $it")
                         accuracy = it
                     }
                 }
@@ -100,27 +105,56 @@ class StepCountingService : Service() {
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!initSensorManager()) stopSelf()
-        registerWalkingBroadcast()
+    private fun handleStepCount(currentStepCount: Int) {
+        if ((isWalking && accuracy >= 1)) {
+            if (!walkingFlag) {
+                walkingFlag = true
+                startCounter = currentStepCount
 
-        logManager.addLog("onStartCommand is called")
-        val channelId = "Foreground channelId"
-        val notificationChannel =
-            NotificationChannel(channelId, channelId, NotificationManager.IMPORTANCE_HIGH)
-        getSystemService(NotificationManager::class.java).createNotificationChannel(
-            notificationChannel
-        )
+                calculateMissedSteps()
+                getTotalStepsCounter()
+                logManager.addLog("StartCount = $currentStepCount & TotalCount = $totalCount")
+            } else {
+                saveTotalStepsCount(calculateTotalSteps(currentStepCount))
+            }
+        } else if (walkingFlag) stopWalking(currentStepCount)
+    }
 
-        val notification = Notification
-            .Builder(this, channelId)
-            .setContentText("StepCounter is walking")
-            .setContentTitle("StepCounter service is enable")
-            .setSmallIcon(R.drawable.ic_launcher_background)
-            .build()
+    private fun getTotalStepsCounter() {
+        serviceScope.launch {
+            totalCount = preferencesHelper.getTotalSteps().first()
+        }
+    }
 
-        startForeground(1001, notification)
-        return START_STICKY
+    private fun saveTotalStepsCount(counter: Int) {
+        serviceScope.launch {
+            preferencesHelper.setTotalSteps(counter)
+        }
+    }
+
+    private fun calculateTotalSteps(currentStepCount: Int): Int {
+        return totalCount + (currentStepCount - startCounter)
+    }
+
+    private fun calculateMissedSteps(){
+        val currentTime = System.currentTimeMillis()
+        if (lastLocalDateTime > 0) {
+            val deltaTime = (currentTime - lastLocalDateTime) / 1000.0
+            val avgStepRate = 1.5
+            val missedSteps = (deltaTime * avgStepRate).toInt()
+            totalCount += missedSteps
+        }
+    }
+
+    private fun stopWalking(currentStepCount: Int) {
+        logManager.addLog("StepCounterManager stop: $currentStepCount")
+        walkingFlag = false
+        totalCount = 0
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        logManager.addLog("StepCounterManager: Service created!")
     }
 
     override fun onDestroy() {
@@ -157,17 +191,24 @@ class StepCountingService : Service() {
     }
 
     private fun getBroadcastResult() {
+        lastLocalDateTime = System.currentTimeMillis()
         serviceScope.launch {
             activityTypeBroadcastManager.broadcastResultState.collect {
                 if (it != null && it.detectedActivity == DetectedActivity.WALKING) {
-                    isWalking = it.confidence >= 70
+                    isWalking = if (it.confidence >= 70) {
+                        stopWalkingCounter = 3
+                        true
+                    } else if (stopWalkingCounter > 0) {
+                        stopWalkingCounter--
+                        true
+                    } else {
+                        stopWalkingCounter = 3
+                        false
+                    }
+
                     logManager.addLog("IS_WALKING = $isWalking & confidence: ${it.confidence}")
                 }
             }
         }
-    }
-
-    override fun onTimeout(startId: Int) {
-        super.onTimeout(startId)
     }
 }

@@ -1,6 +1,8 @@
 package ir.dorantech.gamiransteptester.ui.screen
 
 import android.annotation.SuppressLint
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,10 +29,10 @@ import ir.dorantech.gamiransteptester.ui.viewmodel.SettingsInstructionsViewModel
 @Composable
 fun SettingsInstructionsScreen(
     vm: SettingsInstructionsViewModel = hiltViewModel(),
-    onBackClick: () -> Unit = {},
-    neededPermissions: Array<Permission>,
+    onBack: () -> Unit,
     onRequestPermission: (permissionList: Array<Permission>) -> Unit,
 ) {
+    val neededPermissions = vm.neededPermissions
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,7 +81,10 @@ fun SettingsInstructionsScreen(
             }
         }
 
-        if (neededPermissions.contains(Permission.ACTIVITY_RECOGNITION)) {
+        if (
+            neededPermissions.contains(Permission.ACTIVITY_RECOGNITION) &&
+            VERSION.SDK_INT >= VERSION_CODES.Q
+        ) {
             val isActivityRecognitionEnabled = vm.isActivityRecognitionEnabled.collectAsState()
             Button(
                 onClick = { onRequestPermission(arrayOf(Permission.ACTIVITY_RECOGNITION)) },
@@ -112,9 +117,24 @@ fun SettingsInstructionsScreen(
             }
         }
 
+        if (
+            neededPermissions.contains(Permission.POST_NOTIFICATIONS) &&
+            VERSION.SDK_INT >= VERSION_CODES.TIRAMISU
+        ) {
+            val isPostNotificationsEnabled = vm.isPostNotificationsEnabled.collectAsState()
+            Button(
+                onClick = { onRequestPermission(arrayOf(Permission.POST_NOTIFICATIONS)) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isPostNotificationsEnabled.value,
+            ) {
+                Text(text = "Go to Post Notifications Settings")
+            }
+        }
+
         val isAllConditionsMet = vm.isAllConditionsMet.collectAsState()
         Button(
-            onClick = onBackClick,
+            onClick = { onBack() },
+            modifier = Modifier.fillMaxWidth(),
             enabled = isAllConditionsMet.value,
         ) {
             Text(text = "Back")
@@ -125,7 +145,7 @@ fun SettingsInstructionsScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                vm.loadAllNeededConditionsMet(neededPermissions)
+                vm.loadAllNeededConditionsMet()
             }
         }
 
@@ -140,7 +160,7 @@ fun SettingsInstructionsScreen(
 @Preview
 fun SettingsInstructionsScreenPreview() {
     SettingsInstructionsScreen(
-        neededPermissions = arrayOf(Permission.ACTIVITY_RECOGNITION),
         onRequestPermission = {},
+        onBack = {},
     )
 }

@@ -1,5 +1,7 @@
 package ir.dorantech.gamiransteptester.ui.activity
 
+import android.annotation.SuppressLint
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -13,8 +15,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
@@ -48,9 +51,11 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var recognitionUseCase: ActivityRecognitionUseCase
 
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContent {
             GamiranStepTesterTheme {
                 InitView()
@@ -60,9 +65,10 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun InitView() {
-        mainActivityViewModel.addLogToList("Start Application")
-        val logs by remember { mutableStateOf(LogManager.logs) }
-
+        val logs by remember { derivedStateOf { LogManager.logs.toList() } }
+        LaunchedEffect(Unit) {
+            mainActivityViewModel.addLogToList("Start Application")
+        }
         Column {
             NavHostSetup(
                 modifier = Modifier
