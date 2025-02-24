@@ -6,6 +6,7 @@ import dagger.Provides
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.domain.repository.ActivityRecognitionRequestRepository
 import ir.dorantech.gamiransteptester.domain.repository.StepCounterRepository
@@ -54,4 +55,11 @@ object DomainModules {
 @InstallIn(SingletonComponent::class)
 interface ActivityRecognitionReceiverEntryPoint {
     fun getActivityRecognitionUseCase(): ActivityRecognitionUseCase
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface HiltBroadcastReceiverEntryPoint {
+    fun logManager(): LogManager
+    fun runningBroadcastManager(): ActivityTypeBroadcastManager
 }

@@ -5,11 +5,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
-
 import android.os.IBinder
-import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.AndroidEntryPoint
 import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
+import ir.dorantech.gamiransteptester.core.broadcast.model.DetectActivityResult
 import ir.dorantech.gamiransteptester.core.datastore.PreferencesHelper
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.core.model.ResultCallback
@@ -17,10 +16,14 @@ import ir.dorantech.gamiransteptester.domain.model.UseCaseResult
 import ir.dorantech.gamiransteptester.domain.usecase.SensorStepCountUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -39,7 +42,8 @@ class StepCountingService : Service() {
 
     private var isWalking = false
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private var walkingFlag = false
+    private var saveJob: Job? = null
+    private var isWalkingRecently = false
     private var startCounter = 0
     private var accuracy = 0
     private var totalCount = 0
@@ -48,13 +52,15 @@ class StepCountingService : Service() {
 
     private companion object {
         private const val CHANNEL_ID = "foreground_service_channel"
+        private const val STOP_WALKING_TRY_TO_PROOF = 3
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!initSensorManager()) stopSelf()
+        logAliveMessage()
         registerWalkingBroadcast()
         logManager.addLog("onStartCommand is called")
         startForegroundService()
+        if (!initSensorManager()) stopSelf()
         return START_STICKY
     }
 
@@ -99,36 +105,31 @@ class StepCountingService : Service() {
             }
 
             is UseCaseResult.Error -> {
-                logManager.addLog(result.message)
+                logManager.addLog("initSensorManager is failure: ${result.message}")
                 return false
             }
         }
     }
 
-    private fun handleStepCount(currentStepCount: Int) {
+    private fun handleStepCount(currentStepCount: Int) = serviceScope.launch {
+        if (totalCount == 0) {
+            totalCount = getTotalStepsCounterSync()
+        }
         if ((isWalking && accuracy >= 1)) {
-            if (!walkingFlag) {
-                walkingFlag = true
-                startCounter = currentStepCount
-
-                calculateMissedSteps()
-                getTotalStepsCounter()
-                logManager.addLog("StartCount = $currentStepCount & TotalCount = $totalCount")
-            } else {
-                saveTotalStepsCount(calculateTotalSteps(currentStepCount))
-            }
-        } else if (walkingFlag) stopWalking(currentStepCount)
+            if (!isWalkingRecently) startWalking(currentStepCount)
+            else saveTotalStepsCount(calculateTotalSteps(currentStepCount))
+        } else if (isWalkingRecently) stopWalking(currentStepCount)
     }
 
-    private fun getTotalStepsCounter() {
-        serviceScope.launch {
-            totalCount = preferencesHelper.getTotalSteps().first()
-        }
+    private suspend fun getTotalStepsCounterSync(): Int {
+        return preferencesHelper.getTotalSteps().first()
     }
 
     private fun saveTotalStepsCount(counter: Int) {
-        serviceScope.launch {
+        saveJob?.cancel()
+        saveJob = serviceScope.launch {
             preferencesHelper.setTotalSteps(counter)
+            delay(TimeUnit.SECONDS.toMillis(2))
         }
     }
 
@@ -136,7 +137,7 @@ class StepCountingService : Service() {
         return totalCount + (currentStepCount - startCounter)
     }
 
-    private fun calculateMissedSteps(){
+    private fun calculateMissedSteps() {
         val currentTime = System.currentTimeMillis()
         if (lastLocalDateTime > 0) {
             val deltaTime = (currentTime - lastLocalDateTime) / 1000.0
@@ -146,9 +147,19 @@ class StepCountingService : Service() {
         }
     }
 
+    private fun startWalking(currentStepCount: Int) {
+        if (!isWalkingRecently) {
+            isWalkingRecently = true
+            startCounter = currentStepCount
+
+            calculateMissedSteps()
+            logManager.addLog("StartCount = $currentStepCount & TotalCount = $totalCount")
+        }
+    }
+
     private fun stopWalking(currentStepCount: Int) {
         logManager.addLog("StepCounterManager stop: $currentStepCount")
-        walkingFlag = false
+        isWalkingRecently = false
         totalCount = 0
     }
 
@@ -161,7 +172,7 @@ class StepCountingService : Service() {
         super.onDestroy()
         logManager.addLog("onDestroy is called")
         sensorStepCountUseCase.unregisterStepListener()
-        activityTypeBroadcastManager.unregisterActivityTypeBroadcast(object :
+        activityTypeBroadcastManager.unregisterActivityTypeListener(object :
             ResultCallback<String> {
             override fun onSuccess(data: String) {
                 logManager.addLog(data)
@@ -178,7 +189,7 @@ class StepCountingService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun registerWalkingBroadcast() {
-        activityTypeBroadcastManager.registerActivityTypeBroadcast(object : ResultCallback<String> {
+        activityTypeBroadcastManager.registerActivityTypeListener(object : ResultCallback<String> {
             override fun onSuccess(data: String) {
                 logManager.addLog("registerWalkingBroadcast: $data")
                 getBroadcastResult()
@@ -191,23 +202,28 @@ class StepCountingService : Service() {
     }
 
     private fun getBroadcastResult() {
-        lastLocalDateTime = System.currentTimeMillis()
         serviceScope.launch {
-            activityTypeBroadcastManager.broadcastResultState.collect {
-                if (it != null && it.detectedActivity == DetectedActivity.WALKING) {
-                    isWalking = if (it.confidence >= 70) {
-                        stopWalkingCounter = 3
-                        true
-                    } else if (stopWalkingCounter > 0) {
-                        stopWalkingCounter--
-                        true
-                    } else {
-                        stopWalkingCounter = 3
-                        false
-                    }
-
-                    logManager.addLog("IS_WALKING = $isWalking & confidence: ${it.confidence}")
+            activityTypeBroadcastManager.broadcastResultState.collect { detectActivityResult ->
+                detectActivityResult?.let {
+                    handleWalkingState(it)
                 }
+            }
+        }
+    }
+
+    private fun handleWalkingState(result: DetectActivityResult) {
+        if (result is DetectActivityResult.Walking) {
+            isWalking = result.confidence >= 70 || stopWalkingCounter-- > 0
+            if (!isWalking) stopWalkingCounter = STOP_WALKING_TRY_TO_PROOF
+            logManager.addLog("IS_WALKING = $isWalking & confidence: ${result.confidence}")
+        }
+    }
+
+    private fun logAliveMessage() {
+        serviceScope.launch {
+            while (isActive) {
+                LogManager.addLog("I'm still alive")
+                delay(TimeUnit.MINUTES.toMillis(5))
             }
         }
     }

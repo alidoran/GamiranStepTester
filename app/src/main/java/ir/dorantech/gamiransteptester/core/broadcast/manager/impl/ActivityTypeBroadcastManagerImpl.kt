@@ -6,10 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.google.android.gms.location.ActivityRecognition
+import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
-import ir.dorantech.gamiransteptester.core.broadcast.model.ActivityTypeBroadcastResult
-import ir.dorantech.gamiransteptester.core.broadcast.receiver.ActivityTypeBroadcastReceiver
+import ir.dorantech.gamiransteptester.core.broadcast.model.DetectActivityResult
+import ir.dorantech.gamiransteptester.core.broadcast.receiver.DetectActivityBroadcastReceiver
+import ir.dorantech.gamiransteptester.core.broadcast.util.getDetectActivityModel
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.core.model.ResultCallback
 import ir.dorantech.gamiransteptester.core.model.ResultModel
@@ -22,13 +24,13 @@ class ActivityTypeBroadcastManagerImpl @Inject constructor(
     @ApplicationContext val context: Context,
     val logManager: LogManager
 ) : ActivityTypeBroadcastManager {
-    private val _broadcastResult = MutableStateFlow<ActivityTypeBroadcastResult?>(null)
-    override val broadcastResultState: StateFlow<ActivityTypeBroadcastResult?> =
+    private val _broadcastResult = MutableStateFlow<DetectActivityResult?>(null)
+    override val broadcastResultState: StateFlow<DetectActivityResult?> =
         _broadcastResult.asStateFlow()
     private lateinit var pendingIntent: PendingIntent
 
     @SuppressLint("MissingPermission")
-    override fun registerActivityTypeBroadcast(callback: ResultCallback<String>) {
+    override fun registerActivityTypeListener(callback: ResultCallback<String>) {
         pendingIntent = getPendingIntent()
         val task = ActivityRecognition.getClient(context)
             .requestActivityUpdates(10000L, pendingIntent)
@@ -45,10 +47,10 @@ class ActivityTypeBroadcastManagerImpl @Inject constructor(
     }
 
     private fun getPendingIntent(): PendingIntent {
-        val intentAction2 =
-            "ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS2"
-        val intent = Intent(context, ActivityTypeBroadcastReceiver::class.java).apply {
-            action = intentAction2
+        val intentAction =
+            "ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TYPE_RECEIVER"
+        val intent = Intent(context, DetectActivityBroadcastReceiver::class.java).apply {
+            action = intentAction
         }
         val flags =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -65,7 +67,7 @@ class ActivityTypeBroadcastManagerImpl @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    override fun unregisterActivityTypeBroadcast(callback: ResultCallback<String>) {
+    override fun unregisterActivityTypeListener(callback: ResultCallback<String>) {
         val client = ActivityRecognition.getClient(context)
         val task = client.removeActivityTransitionUpdates(pendingIntent)
         task.addOnSuccessListener {
@@ -79,9 +81,17 @@ class ActivityTypeBroadcastManagerImpl @Inject constructor(
         }
     }
 
-    override suspend fun setBroadcastResult(broadcastResult: ResultModel<ActivityTypeBroadcastResult>) {
+    override suspend fun setBroadcastResult(broadcastResult: ResultModel<List<DetectedActivity>>) {
         when (broadcastResult) {
-            is ResultModel.Success -> _broadcastResult.emit(broadcastResult.data)
+            is ResultModel.Success -> {
+                val walkingResult =
+                    broadcastResult.data.find { it.type == DetectedActivity.WALKING }
+                walkingResult?.confidence?.let { confidence ->
+                    if (confidence >= 70)
+                        _broadcastResult.emit(getDetectActivityModel(walkingResult))
+                }
+            }
+
             is ResultModel.Error -> logManager.addLog("Broadcast Failed: ${broadcastResult.message}")
         }
     }

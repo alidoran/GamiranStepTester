@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "ir.dorantech.gamiransteptester"
     compileSdk = 35
+    buildToolsVersion = "35.0.0"
 
     defaultConfig {
         applicationId = "ir.dorantech.gamiransteptester"

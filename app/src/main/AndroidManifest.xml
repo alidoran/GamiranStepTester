@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="ir.dorantech.gamiransteptester">
 
     <!--Step Counter needed permission-->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
@@ -32,6 +33,7 @@
         <activity
             android:name=".ui.activity.MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.GamiranStepTester">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,25 +48,20 @@
                 <action android:name="ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS" />
             </intent-filter>
         </receiver>
+
         <receiver
-            android:name=".core.broadcast.receiver.ActivityTypeBroadcastReceiver"
+            android:name=".core.broadcast.receiver.DetectActivityBroadcastReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TRANSITIONS2" />
+                <action android:name="ir.dorantech.gamiransteptester.ACTION_PROCESS_ACTIVITY_TYPE_RECEIVER" />
             </intent-filter>
         </receiver>
 
         <service
             android:name=".core.services.StepCountingService"
-            android:exported="true"
-            android:foregroundServiceType="health"
-            android:permission="android.permission.BIND_JOB_SERVICE">
-            <intent-filter>
-                <action android:name=".core.services.StepCountingService" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.work.impl.workers.ServiceWorker"
-                android:value="true" />
+            android:exported="false"
+            android:enabled="true"
+            android:foregroundServiceType="health">
         </service>
     </application>
 </manifest>
