@@ -4,25 +4,27 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.google.android.gms.location.ActivityRecognitionResult
-import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import ir.dorantech.gamiransteptester.core.broadcast.manager.ActivityTypeBroadcastManager
-import ir.dorantech.gamiransteptester.core.broadcast.model.ActivityTypeBroadcastResult
 import ir.dorantech.gamiransteptester.core.logging.LogManager
 import ir.dorantech.gamiransteptester.core.model.ResultModel
+import ir.dorantech.gamiransteptester.domain.di.HiltBroadcastReceiverEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@AndroidEntryPoint
-class ActivityTypeBroadcastReceiver : BroadcastReceiver() {
-    @Inject
+class DetectActivityBroadcastReceiver : BroadcastReceiver() {
     lateinit var logManager: LogManager
-
-    @Inject
-    lateinit var runningBroadcastManager: ActivityTypeBroadcastManager
+    private lateinit var runningBroadcastManager: ActivityTypeBroadcastManager
 
     override fun onReceive(context: Context, intent: Intent) {
+        val appContext = context.applicationContext
+        val hiltEntryPoint = EntryPointAccessors.fromApplication(
+            appContext, HiltBroadcastReceiverEntryPoint::class.java
+        )
+        logManager = hiltEntryPoint.logManager()
+        runningBroadcastManager = hiltEntryPoint.runningBroadcastManager()
+
         if (ActivityRecognitionResult.hasResult(intent)) {
             val result = ActivityRecognitionResult.extractResult(intent)
             val detectedActivities = result?.probableActivities ?: emptyList()
@@ -37,23 +39,17 @@ class ActivityTypeBroadcastReceiver : BroadcastReceiver() {
         if (ActivityRecognitionResult.hasResult(intent)) {
             val result = ActivityRecognitionResult.extractResult(intent)
             val detectedActivities = result?.probableActivities ?: emptyList()
-
-            detectedActivities.forEach { activity ->
-                val broadcastSuccessResult: ResultModel<ActivityTypeBroadcastResult> =
-                    ResultModel.Success(
-                        ActivityTypeBroadcastResult(activity.type, activity.confidence)
-                    )
-                CoroutineScope(Dispatchers.IO).launch {
-                    runningBroadcastManager.setBroadcastResult(broadcastSuccessResult)
-                }
-
+            val broadcastSuccessResult =
+                ResultModel.Success(detectedActivities)
+            CoroutineScope(Dispatchers.Main).launch {
+                runningBroadcastManager.setBroadcastResult(broadcastSuccessResult)
             }
         } else {
             logManager.addLog("No recognition result found in intent")
-            val broadcastFailedResult: ResultModel<ActivityTypeBroadcastResult> = ResultModel.Error(
+            val broadcastFailedResult = ResultModel.Error(
                 "No recognition result found in intent"
             )
-            CoroutineScope(Dispatchers.IO).launch {
+            CoroutineScope(Dispatchers.Main).launch {
                 runningBroadcastManager.setBroadcastResult(broadcastFailedResult)
             }
         }

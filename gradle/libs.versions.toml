@@ -1,16 +1,16 @@
 [versions]
-activityCompose = "1.9.3"
+activityCompose = "1.10.0"
 agp = "8.8.1"
-composeBom = "2024.12.01"
+composeBom = "2025.02.00"
 coreKtx = "1.15.0"
 hiltAndroid = "2.52"
 kotlin = "2.0.21"
 kotlinxCoroutinesPlayServices = "1.9.0"
 kotlinxSerializationJson = "1.7.3"
 lifecycleRuntimeKtx = "2.8.7"
-navigationCompose = "2.8.5"
+navigationCompose = "2.8.7"
 coroutines = "1.9.0"
-activity = "1.9.3"
+activity = "1.10.0"
 dagger = "2.52"
 ksp = "2.0.21-1.0.27"
 hiltNavigationCompose = "1.2.0"
@@ -50,4 +50,3 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-
