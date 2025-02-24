@@ -3,10 +3,10 @@ package ir.dorantech.gamiransteptester.core.navigation
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -21,6 +21,7 @@ import ir.dorantech.gamiransteptester.ui.screen.SettingsInstructionsScreen
 import ir.dorantech.gamiransteptester.ui.screen.StepCountScreen
 import ir.dorantech.gamiransteptester.ui.screen.UserActivityScreen
 import ir.dorantech.gamiransteptester.ui.viewmodel.SettingsInstructionsViewModel
+import kotlinx.coroutines.launch
 
 @SuppressLint("InlinedApi")
 @Composable
@@ -30,8 +31,8 @@ fun NavHostSetup(
     onRequestPermission: (permissionList: Array<Permission>) -> Unit,
 ) {
     val navController = rememberNavController()
-    val isAllConditionsMet by vm.isAllConditionsMet.collectAsState()
     var targetDestination by remember { mutableStateOf<NavRoute?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(vm.neededPermissions) {
         vm.loadAllNeededConditionsMet()
@@ -42,21 +43,29 @@ fun NavHostSetup(
         navController = navController,
         startDestination = NavRoute.Home
     ) {
-        vm.loadAllNeededConditionsMet()
+        coroutineScope.launch { vm.loadAllNeededConditionsMet() }
         composable<NavRoute.Home> {
             HomeScreen(
                 onStepCounterClick = {
-                    vm.updateNeededPermissions(arrayOf(Permission.ACTIVITY_RECOGNITION)){
-                    targetDestination = NavRoute.StepCounter}
+                    coroutineScope.launch {
+                        vm.updateNeededPermissions(arrayOf(Permission.ACTIVITY_RECOGNITION))
+                        targetDestination = NavRoute.StepCounter
+                    }
                 },
                 onUserActivityClick = {
-                    vm.updateNeededPermissions(arrayOf(Permission.ACTIVITY_RECOGNITION)){
-                    targetDestination = NavRoute.UserActivity}
+                    coroutineScope.launch {
+                        vm.updateNeededPermissions(arrayOf(Permission.ACTIVITY_RECOGNITION))
+                        targetDestination = NavRoute.UserActivity
+                    }
                 },
                 onLocationPermissionClick = {
-                    vm.updateNeededPermissions(
-                        arrayOf(Permission.ACCESS_COARSE_LOCATION, Permission.ACCESS_FINE_LOCATION)
-                    ) {
+                    coroutineScope.launch {
+                        vm.updateNeededPermissions(
+                            arrayOf(
+                                Permission.ACCESS_COARSE_LOCATION,
+                                Permission.ACCESS_FINE_LOCATION
+                            )
+                        )
                         targetDestination = NavRoute.AppSettings
                     }
                 },
@@ -64,14 +73,15 @@ fun NavHostSetup(
                     navController.navigate(NavRoute.Sensor)
                 },
                 onRunningCounterClick = {
-                    vm.updateNeededPermissions(
-                        arrayOf(
-                            Permission.ACTIVITY_RECOGNITION,
-                            Permission.BATTERY_OPTIMIZATION,
-                            Permission.AUTO_START,
-                            Permission.POST_NOTIFICATIONS,
+                    coroutineScope.launch {
+                        vm.updateNeededPermissions(
+                            arrayOf(
+                                Permission.ACTIVITY_RECOGNITION,
+                                Permission.BATTERY_OPTIMIZATION,
+                                Permission.AUTO_START,
+                                Permission.POST_NOTIFICATIONS,
+                            )
                         )
-                    ) {
                         targetDestination = NavRoute.ServiceCounter
                     }
                 },
@@ -93,7 +103,7 @@ fun NavHostSetup(
 
     LaunchedEffect(targetDestination) {
         if (targetDestination != null) {
-            if (isAllConditionsMet) navController.navigate(targetDestination!!)
+            if (vm.isAllConditionsMet.value) navController.navigate(targetDestination!!)
             else navController.navigate(NavRoute.AppSettings)
             targetDestination = null
         }

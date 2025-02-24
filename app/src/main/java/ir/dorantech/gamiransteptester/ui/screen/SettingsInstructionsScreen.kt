@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +25,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import ir.dorantech.gamiransteptester.core.model.Permission
 import ir.dorantech.gamiransteptester.ui.viewmodel.SettingsInstructionsViewModel
+import kotlinx.coroutines.launch
 
 @SuppressLint("InlinedApi")
 @Composable
@@ -33,6 +35,7 @@ fun SettingsInstructionsScreen(
     onRequestPermission: (permissionList: Array<Permission>) -> Unit,
 ) {
     val neededPermissions = vm.neededPermissions
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,7 +76,7 @@ fun SettingsInstructionsScreen(
         if (neededPermissions.contains(Permission.AUTO_START)) {
             val isAutoStartOpened = vm.isAutoStartOpened.collectAsState()
             Button(
-                onClick = { vm.onAutoStartSetting() },
+                onClick = { coroutineScope.launch { vm.onAutoStartSetting() } },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isAutoStartOpened.value,
             ) {
@@ -145,7 +148,7 @@ fun SettingsInstructionsScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                vm.loadAllNeededConditionsMet()
+                coroutineScope.launch { vm.loadAllNeededConditionsMet() }
             }
         }
 
